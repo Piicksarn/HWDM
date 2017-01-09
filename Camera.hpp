@@ -10,23 +10,31 @@ private:
     Size borderSize;
     vector<string> fileList;
     Mat cameraMatrix;
-    Mat rotationMatrix;
-    Mat translateMatrix;
+    Mat rvec;
+    Mat tvec;
     Mat distCoeffsMatrix;
     Mat resultImg;
-
-
-    vector<vector<Point2f> > srcPoints;
-    vector<vector<Point3f> > dstPoints;
-
+    Size imgSize;
+    vector<vector<Point2f>> srcPoints;
+    vector<vector<Point3f>> dstPoints;
+    vector<Point2f> imgPoint;
+    vector<Point3f> objectPoint;
+    void calRTvector();
 public:
     void setFileList(int fileIndex);
     void Initialize(Size size, int index);
     void addChessboardPoints();
     void calibrate(Mat img);
     Mat getCameraMat();
-    Mat getRotationMat();
-    Mat getTraslateMat();
+    Mat getRvec();
+    Mat getTvec();
     Mat getDistory();
     Mat getResultImg();
+
+    // vector<Point3f> getObjectPoint();
+    // vector<Point2f> getImgPoint();
+    void calibrateAll(); 
+    vector<vector<Point3f>> getObjectPoint();
+    vector<vector<Point2f>> getImgPoint();
+    Size getImgSize();
 };
