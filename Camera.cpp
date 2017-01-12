@@ -80,14 +80,8 @@ void Camera::calRTvector() {
     findChessboardCorners(image, borderSize, srcCandidateCorners);
     TermCriteria param(TermCriteria::MAX_ITER + TermCriteria::EPS, 30, 0.1);
     cornerSubPix(image, srcCandidateCorners, Size(5,5), Size(-1,-1), param);
-   objectPoint = dstCandidateCorners;
-   imgPoint = srcCandidateCorners;
-// cout<<"before : "<<cameraMatrix<<endl;
-// cameraMatrix = initCameraMatrix2D(dstPoints, srcPoints, imgSize, 0);
-// undistortPoints(imgPoint, imgPoint, cameraMatrix, distCoeffsMatrix, Mat(), cameraMatrix);
-//
-// cout<<"after : "<<cameraMatrix<<endl;
-// cout<<"======================"<<endl;
+    objectPoint = dstCandidateCorners;
+    imgPoint = srcCandidateCorners;
     solvePnP(dstCandidateCorners, srcCandidateCorners, cameraMatrix, distCoeffsMatrix, rvec, tvec);
 
 }
@@ -109,14 +103,10 @@ Mat Camera::getResultImg() {
 Size Camera::getImgSize() {
     return imgSize;
 }
-//vector<Point3f> Camera::getObjectPoint() {
 vector<vector<Point3f>> Camera::getObjectPoint() {
-    // return objectPoint;
     return dstPoints;
 }
-// vector<Point2f> Camera::getImgPoint() {
 vector<vector<Point2f>> Camera::getImgPoint() {
-    // return imgPoint;
     return srcPoints;
 }
 void Camera::calibrateAll() {
@@ -150,11 +140,7 @@ void Camera::calibrateAll() {
       }
   }
 
-
   Mat camMat, distCoeffs, map1, map2;
   vector<Mat> rvecs, tvecs;
   calibrateCamera(dstPoints2, srcPoints2, imgSize, camMat, distCoeffs, rvecs, tvecs);
-  cout<<"----------------------------"<<endl;
-  cout<<"camera Matrix : "<<camMat<<endl;
-  cout<<"distCoeffs : "<<distCoeffs<<endl;
 }
