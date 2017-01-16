@@ -56,7 +56,6 @@ void Camera::addChessboardPoints(){
 }
 
 void Camera::calibrate(Mat img){
-
     imgSize = img.size();
     Mat camMat, distCoeffs, map1, map2;
     vector<Mat> rvecs, tvecs;
@@ -83,7 +82,6 @@ void Camera::calRTvector() {
     objectPoint = dstCandidateCorners;
     imgPoint = srcCandidateCorners;
     solvePnP(dstCandidateCorners, srcCandidateCorners, cameraMatrix, distCoeffsMatrix, rvec, tvec);
-
 }
 Mat Camera::getCameraMat() {
     return cameraMatrix;

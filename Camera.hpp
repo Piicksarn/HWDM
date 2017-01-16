@@ -1,4 +1,6 @@
 #include <opencv2/opencv.hpp>
+#include <opencv2/bgsegm.hpp>
+#include <opencv2/calib3d.hpp>
 #include <vector>
 #include <string>
 
@@ -33,7 +35,7 @@ public:
 
     // vector<Point3f> getObjectPoint();
     // vector<Point2f> getImgPoint();
-    void calibrateAll(); 
+    void calibrateAll();
     vector<vector<Point3f>> getObjectPoint();
     vector<vector<Point2f>> getImgPoint();
     Size getImgSize();
