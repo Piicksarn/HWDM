@@ -6,12 +6,12 @@ void Camera::Initialize(Size size, int index){
     addChessboardPoints();
 }
 void Camera::setFileList(int fileIndex){
-        String imgFolder = to_string(fileIndex) + "/" + to_string(fileIndex) + "-";
-        for (int j = 1; j <= 20; j++) {
-            String filename = "/Users/yangenci/Desktop/";
-            filename = filename + imgFolder + to_string(j) + ".bmp";
-            fileList.push_back(filename);
-        }
+    String imgFolder = to_string(fileIndex) + "/" + to_string(fileIndex) + "-";
+    for (int j = 1; j <= 19; j++) {
+        String filename = "/Users/yangenci/Desktop/";
+        filename = filename + imgFolder + to_string(j) + ".bmp";
+        fileList.push_back(filename);
+    }
 }
 
 void Camera::addChessboardPoints(){
@@ -24,7 +24,6 @@ void Camera::addChessboardPoints(){
             dstCandidateCorners.push_back(Point3f(i, j, 0.0f));
         }
     }
-    cout<<borderSize<<endl;
 
     for (int i = 0; i < fileList.size(); i++) {
         //Read all the images for collibration and set it to gray scale
@@ -57,8 +56,7 @@ void Camera::addChessboardPoints(){
 }
 
 void Camera::calibrate(Mat img){
-
-    Size imgSize = img.size();
+    imgSize = img.size();
     Mat camMat, distCoeffs, map1, map2;
     vector<Mat> rvecs, tvecs;
     calibrateCamera(dstPoints, srcPoints, imgSize, camMat, distCoeffs, rvecs, tvecs);
@@ -66,22 +64,81 @@ void Camera::calibrate(Mat img){
     remap(img, resultImg, map1, map2, INTER_LINEAR);
     cameraMatrix = camMat;
     distCoeffsMatrix = distCoeffs;
-//     rotationMatrix = rvecs;
-//     translateMatrix = tvecs;
-//
+    calRTvector();
+}
+void Camera::calRTvector() {
+    vector<Point2f> srcCandidateCorners;
+    vector<Point3f> dstCandidateCorners;
+    for(int i=0; i<borderSize.height; i++){
+        for(int j=0; j<borderSize.width; j++){
+            dstCandidateCorners.push_back(Point3f(i, j, 0.0f));
+        }
+    }
+
+    Mat image = resultImg.clone();
+    findChessboardCorners(image, borderSize, srcCandidateCorners);
+    TermCriteria param(TermCriteria::MAX_ITER + TermCriteria::EPS, 30, 0.1);
+    cornerSubPix(image, srcCandidateCorners, Size(5,5), Size(-1,-1), param);
+    objectPoint = dstCandidateCorners;
+    imgPoint = srcCandidateCorners;
+    solvePnP(dstCandidateCorners, srcCandidateCorners, cameraMatrix, distCoeffsMatrix, rvec, tvec);
 }
 Mat Camera::getCameraMat() {
     return cameraMatrix;
 }
-Mat Camera::getRotationMat() {
-    return rotationMatrix;
+Mat Camera::getRvec() {
+    return rvec;
 }
-Mat Camera::getTraslateMat() {
-    return translateMatrix;
+Mat Camera::getTvec() {
+    return tvec;
 }
 Mat Camera::getDistory() {
     return distCoeffsMatrix;
 }
 Mat Camera::getResultImg() {
     return resultImg;
+}
+Size Camera::getImgSize() {
+    return imgSize;
+}
+vector<vector<Point3f>> Camera::getObjectPoint() {
+    return dstPoints;
+}
+vector<vector<Point2f>> Camera::getImgPoint() {
+    return srcPoints;
+}
+void Camera::calibrateAll() {
+  vector<Point2f> srcCandidateCorners;
+  vector<Point3f> dstCandidateCorners;
+  vector<vector<Point2f>> srcPoints2;
+  vector<vector<Point3f>> dstPoints2;
+  // Initialize the dist matrix
+  for(int i=0; i<borderSize.height; i++){
+      for(int j=0; j<borderSize.width; j++){
+          dstCandidateCorners.push_back(Point3f(i, j, 0.0f));
+      }
+  }
+
+  for (int i = 0; i < fileList.size(); i++) {
+      //Read all the images for collibration and set it to gray scale
+      Mat image = imread(fileList[i],CV_LOAD_IMAGE_GRAYSCALE);
+      Mat camMat, distCoeffs, map1, map2;
+      vector<Mat> rvecs, tvecs;
+      initUndistortRectifyMap(cameraMatrix, distCoeffsMatrix, Mat(), Mat(), imgSize, CV_32F, map1, map2);
+      remap(image, image, map1, map2, INTER_LINEAR);
+      findChessboardCorners(image, borderSize, srcCandidateCorners);
+
+      TermCriteria param(TermCriteria::MAX_ITER + TermCriteria::EPS, 30, 0.1);
+
+      cornerSubPix(image, srcCandidateCorners, Size(5,5), Size(-1,-1), param);
+
+      if(srcCandidateCorners.size() == borderSize.area()){
+          srcPoints2.push_back(srcCandidateCorners);
+          dstPoints2.push_back(dstCandidateCorners);
+      }
+  }
+
+  Mat camMat, distCoeffs, map1, map2;
+  vector<Mat> rvecs, tvecs;
+  calibrateCamera(dstPoints2, srcPoints2, imgSize, camMat, distCoeffs, rvecs, tvecs);
 }

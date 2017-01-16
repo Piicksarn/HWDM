@@ -93,15 +93,15 @@ void testDMap3(Mat img_1, Mat img_2) {
 
 int main(){
 
-    Mat left = imread("/Users/yangenci/Desktop/left.bmp", 1);
-    Mat right = imread("/Users/yangenci/Desktop/right.bmp", 1);
 
     // Do preprocedure
+    Mat left = imread("/Users/yangenci/Desktop/left.bmp", CV_LOAD_IMAGE_GRAYSCALE);
+    Mat right = imread("/Users/yangenci/Desktop/right.bmp", CV_LOAD_IMAGE_GRAYSCALE);
+
     Preprocedure preprocedure;
-    preprocedure.Initialize(Size(9, 6));
-    preprocedure.calibrate(left, right);
-    
-    
+    preprocedure.Initialize(Size(9, 6), left, right);
+
+
     waitKey();
     return 0;
 }

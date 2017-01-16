@@ -2,18 +2,25 @@
 
 class Preprocedure{
 private:
-    Size m_borderSize;
-    Mat rightImage;
-    Mat leftImage;
-    Mat cameraMat;
-    Mat m_rvecOfTwo;
-    Mat m_tvecOfTwo;
+    Mat rvecOfTwo;
+    Mat tvecOfTwo;
     Mat m_distOfTwo;
     Camera leftCamera;
     Camera rightCamera;
-
+    Size imgSize;
+    Mat R1, R2, P1, P2;
+    int status;
+    Mat leftCam;
+    Mat leftDis;
+    Mat rightCam;
+    Mat rightDis;
+    void testStereoRectify(Mat left, Mat right);
+    void testStereoCalibrate();
+    void writeParaFile();
+    void readPareFile();
 public:
-    void Initialize(Size size);
-    void calibrate(Mat left, Mat right);
-    Mat getDisparityMap();
+    void Initialize(Size size, Mat left, Mat right);
+    void calibrate();
+    void imageRectification();
+    Mat getDisparityMap(Mat left, Mat right);
 };
