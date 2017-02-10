@@ -36,20 +36,25 @@ void Preprocedure::testStereoRectify(Mat left, Mat right) {
     Mat Q;
     Rect validRoi[2];
     stereoRectify(leftCam, leftDis, rightCam, rightDis, imgSize, rvecOfTwo, tvecOfTwo, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, 0,imgSize, &validRoi[0], &validRoi[1]);
-    initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
+//    initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
+    initUndistortRectifyMap(leftCam, leftDis, Mat(), Mat(), imgSize, CV_16SC2, map1, map2);
+
     remap(img, test, map1, map2, INTER_LINEAR);
 //    cvtColor(test, test, COLOR_GRAY2BGR);
 
     Mat img2 = right;
-    initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
+//    initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
+    initUndistortRectifyMap(rightCam, rightDis, Mat(), Mat(), imgSize, CV_32F, map1, map2);
+
     remap(img2, test2, map1, map2, INTER_LINEAR);
 //    cvtColor(test2, test2, COLOR_GRAY2BGR);
 
     hconcat(test, test2, test3);
         for (int j = 0; j <= test3.rows; j += 16)
             line(test3, Point(0, j), Point(test3.cols, j), Scalar(0, 255, 0), 1, 8);
-
+    
     imshow("test-right", test3);
+    getDisparityMap(test, test2);
 }
 void Preprocedure::testStereoCalibrate() {
     Mat R, T, E, F;
@@ -64,13 +69,33 @@ void Preprocedure::testStereoCalibrate() {
     writeParaFile();
 }
  Mat Preprocedure::getDisparityMap(Mat left, Mat right) {
-     Mat imgDis16S = Mat( left.rows, left.cols, CV_8UC1 );
+     Mat imgDis16S = Mat( left.rows, left.cols, CV_16S  );
+     Mat imgDisparity8U = Mat( left.rows, left.cols, CV_8UC1 );
      int disNum = 16 * 5;
-     int size = 21;
+     int size = 25;
 
      Ptr<StereoBM> sbm = StereoBM::create(disNum, size);
-     sbm->compute(left, right, imgDis16S);
+//     Ptr<DisparityWLSFilter> wls_filter = createDisparityWLSFilter(sbm);
+     
+//     cvtColor(left, left, CV_GRAY2BGR);
+//     pyrMeanShiftFiltering( left, left, 20, 20, 3);
+//     cvtColor(right, right, CV_GRAY2BGR);
+//     pyrMeanShiftFiltering( right, right, 20, 20, 3);
+//     cvtColor(left, left, CV_BGR2GRAY);
+//     cvtColor(right, right, CV_BGR2GRAY);
 
+
+     
+     sbm->compute(left, right, imgDis16S);
+     double minVal; double maxVal;
+     minMaxLoc(imgDis16S, &minVal, &maxVal );
+     printf("Min disp: %f Max value: %f \n", minVal, maxVal);
+     //-- 4. Display it as a CV_8UC1 image
+     imgDis16S.convertTo( imgDisparity8U, CV_8UC1, 255/(maxVal - minVal));
+     imshow( "windowDisparity", imgDisparity8U );
+     
+     
+     
      imshow("result", imgDis16S);
      return imgDis16S;
  }
