@@ -13,8 +13,10 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
         leftCamera.Initialize(Size(9,6), 1);
         rightCamera.Initialize(Size(9,6), 2);
         calibrate();
+
         imgSize = leftCamera.getImgSize();
         testStereoCalibrate();
+
     }
     else
         readPareFile();
@@ -22,8 +24,8 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
 }
 
 void Preprocedure::calibrate() {
-      Mat left = imread("/Users/yangenci/Desktop/1/1-14.bmp", CV_LOAD_IMAGE_GRAYSCALE);
-      Mat right = imread("/Users/yangenci/Desktop/2/2-14.bmp", CV_LOAD_IMAGE_GRAYSCALE);
+      Mat left = imread("/Users/yangenci/Desktop/Data/left/14.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
+      Mat right = imread("/Users/yangenci/Desktop/Data/right/14.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
 
       leftCamera.calibrate(left);
       rightCamera.calibrate(right);
