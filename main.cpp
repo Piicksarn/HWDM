@@ -99,7 +99,40 @@ int main(){
     Mat right = imread("/Users/yangenci/Desktop/right.bmp", CV_LOAD_IMAGE_GRAYSCALE);
 
     Preprocedure preprocedure;
-    preprocedure.Initialize(Size(9, 6), left, right);
+
+
+       Mat leftFrame, rightFrame, rightRoi;
+   //    VideoCapture cap("/Users/yangenci/Documents/Material/SR.avi");
+       VideoCapture capLeft("/Users/yangenci/Desktop/left.mp4");
+       VideoCapture capRight("/Users/yangenci/Desktop/right.mp4");
+
+       Ptr<BackgroundSubtractorMOG2> mog2 = createBackgroundSubtractorMOG2(500, 16, true);
+
+       if (!capLeft.isOpened() || !capRight.isOpened()) {
+           cout << "Cannot open the video file." << endl;
+           return -1;
+       }
+       while(1) {
+         capLeft.read(leftFrame);
+         capRight.read(rightFrame);
+
+//
+       cvtColor(leftFrame, leftFrame, CV_BGR2GRAY);
+       cvtColor(rightFrame, rightFrame, CV_BGR2GRAY);
+//
+
+         preprocedure.Initialize(Size(9, 6), leftFrame, rightFrame);
+
+           capLeft.read(leftFrame);
+           capRight.read(rightFrame);
+          //  rightRoi = rightFrame;
+          //  leftFrame = doMorph(mog2, leftFrame);
+          //  rightFrame = doMorph(mog2, rightFrame);
+          //
+           imshow("left - Result", leftFrame);
+          //  imshow("right - Result", mergedImge(rightFrame, rightRoi));
+           waitKey(10);
+       }
 
 
     waitKey();
