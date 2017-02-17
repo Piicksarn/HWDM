@@ -13,8 +13,10 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
         leftCamera.Initialize(Size(9,6), 1);
         rightCamera.Initialize(Size(9,6), 2);
         calibrate();
+
         imgSize = leftCamera.getImgSize();
         testStereoCalibrate();
+
     }
     else
         readPareFile();
@@ -22,15 +24,15 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
 }
 
 void Preprocedure::calibrate() {
-      Mat left = imread("/Users/yangenci/Desktop/1/1-14.bmp", CV_LOAD_IMAGE_GRAYSCALE);
-      Mat right = imread("/Users/yangenci/Desktop/2/2-14.bmp", CV_LOAD_IMAGE_GRAYSCALE);
+      Mat left = imread("/Users/yangenci/Desktop/Data/left/14.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
+      Mat right = imread("/Users/yangenci/Desktop/Data/right/14.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
 
       leftCamera.calibrate(left);
       rightCamera.calibrate(right);
 }
 
 void Preprocedure::testStereoRectify(Mat left, Mat right) {
-    
+
     Mat map1, map2, test, test2, test3;
     Mat img = left;
     Mat Q;
@@ -52,9 +54,9 @@ void Preprocedure::testStereoRectify(Mat left, Mat right) {
     hconcat(test, test2, test3);
         for (int j = 0; j <= test3.rows; j += 16)
             line(test3, Point(0, j), Point(test3.cols, j), Scalar(0, 255, 0), 1, 8);
-    
+
     imshow("test-right", test3);
-    getDisparityMap(test, test2);
+//    getDisparityMap(test, test2);
 }
 void Preprocedure::testStereoCalibrate() {
     Mat R, T, E, F;
@@ -65,7 +67,7 @@ void Preprocedure::testStereoCalibrate() {
     leftDis = leftCamera.getDistory();
     rightCam = rightCamera.getCameraMat();
     rightDis = rightCamera.getDistory();
-   
+
     writeParaFile();
 }
  Mat Preprocedure::getDisparityMap(Mat left, Mat right) {
@@ -76,7 +78,7 @@ void Preprocedure::testStereoCalibrate() {
 
      Ptr<StereoBM> sbm = StereoBM::create(disNum, size);
 //     Ptr<DisparityWLSFilter> wls_filter = createDisparityWLSFilter(sbm);
-     
+
 //     cvtColor(left, left, CV_GRAY2BGR);
 //     pyrMeanShiftFiltering( left, left, 20, 20, 3);
 //     cvtColor(right, right, CV_GRAY2BGR);
@@ -85,7 +87,7 @@ void Preprocedure::testStereoCalibrate() {
 //     cvtColor(right, right, CV_BGR2GRAY);
 
 
-     
+
      sbm->compute(left, right, imgDis16S);
      double minVal; double maxVal;
      minMaxLoc(imgDis16S, &minVal, &maxVal );
@@ -93,9 +95,9 @@ void Preprocedure::testStereoCalibrate() {
      //-- 4. Display it as a CV_8UC1 image
      imgDis16S.convertTo( imgDisparity8U, CV_8UC1, 255/(maxVal - minVal));
      imshow( "windowDisparity", imgDisparity8U );
-     
-     
-     
+
+
+
      imshow("result", imgDis16S);
      return imgDis16S;
  }

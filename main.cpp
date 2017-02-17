@@ -21,33 +21,33 @@ void testDMap3(Mat img_1, Mat img_2) {
     vector<Point2f> scene;
     vector<DMatch> matches;
     vector<DMatch> good_matches;
-
+    
     /*
-
+     
      ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
      | Using SURF, detect the keypoints first, and then compute the       |
      |    description, saving in the dsp1 and dsp2.                       |
      |____________________________________________________________________|
-
+     
      */
-
+    
     Ptr<xfeatures2d::SURF> surf = xfeatures2d::SURF::create();
     surf -> setHessianThreshold(50);
     surf -> detect(img_1, keyp1);
     surf -> detect(img_2, keyp2);
     surf -> compute(img_1, keyp1, dspt1);
     surf -> compute(img_2, keyp2, dspt2);
-
+    
     /*
-
+     
      ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
      | We need to select the good matching result to show.                |
      | If we didn't do the selection before using drawMatches function,   |
      |    the lines shown on the result img will too much.                |
      |____________________________________________________________________|
-
+     
      */
-
+    
     double max_dist = 0;
     double min_dist = 50;
     matcher.match( dspt1, dspt2,matches );
@@ -61,47 +61,57 @@ void testDMap3(Mat img_1, Mat img_2) {
     for(int i = 0; i < dspt1.rows; i++)
         if(matches[i].distance < 3 * min_dist)
             good_matches.push_back(matches[i]);
-
+    
     drawMatches(img_1, keyp1, img_2, keyp2,
                 good_matches, matchImg, Scalar::all(-1), Scalar::all(-1),
                 vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
     imshow("Good_Matches", matchImg);
-
-//    /*
-//
-//     ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
-//     | In the code shown below, the purpose is to stitch the images by    |
-//     |    using the good matching result.                                 |
-//     | First, to find the homography and the second is to wrap the        |
-//     |    origin image to homography result.                              |
-//     | Finally, we need to use copyTo function to stitch the results.     |
-//     |____________________________________________________________________|
-//
-//     */
-//
-//    for(int i = 0; i < good_matches.size(); i++) {
-//        obj.push_back( keyp1[ good_matches[i].queryIdx ].pt );
-//        scene.push_back( keyp2[ good_matches[i].trainIdx ].pt );
-//    }
-//
-//    Mat H = findHomography( obj, scene, CV_RANSAC );
-//    warpPerspective(img_2, output, H.inv(), Size(img_2.cols*2, img_2.rows));
-//    Mat target_in_big_mat(output, Rect(0, 0, img_1.cols, img_1.rows));
-//    img_1.copyTo(target_in_big_mat);
-//    imshow("result", output);
+    
+    //    /*
+    //
+    //     ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
+    //     | In the code shown below, the purpose is to stitch the images by    |
+    //     |    using the good matching result.                                 |
+    //     | First, to find the homography and the second is to wrap the        |
+    //     |    origin image to homography result.                              |
+    //     | Finally, we need to use copyTo function to stitch the results.     |
+    //     |____________________________________________________________________|
+    //
+    //     */
+    //
+    //    for(int i = 0; i < good_matches.size(); i++) {
+    //        obj.push_back( keyp1[ good_matches[i].queryIdx ].pt );
+    //        scene.push_back( keyp2[ good_matches[i].trainIdx ].pt );
+    //    }
+    //
+    //    Mat H = findHomography( obj, scene, CV_RANSAC );
+    //    warpPerspective(img_2, output, H.inv(), Size(img_2.cols*2, img_2.rows));
+    //    Mat target_in_big_mat(output, Rect(0, 0, img_1.cols, img_1.rows));
+    //    img_1.copyTo(target_in_big_mat);
+    //    imshow("result", output);
 }
 
 int main(){
-
-
+    
     // Do preprocedure
-    Mat left = imread("/Users/yangenci/Desktop/left.bmp", CV_LOAD_IMAGE_GRAYSCALE);
-    Mat right = imread("/Users/yangenci/Desktop/right.bmp", CV_LOAD_IMAGE_GRAYSCALE);
-
     Preprocedure preprocedure;
-    preprocedure.Initialize(Size(9, 6), left, right);
-
-
-    waitKey();
+    
+    Mat leftFrame, rightFrame, rightRoi;
+    VideoCapture capLeft("/Users/yangenci/Desktop/left.mp4");
+    VideoCapture capRight("/Users/yangenci/Desktop/right.mp4");
+    
+    if (!capLeft.isOpened() || !capRight.isOpened()) {
+        cout << "Cannot open the video file." << endl;
+        return -1;
+    }
+    while(1) {
+        capLeft.read(leftFrame);
+        capRight.read(rightFrame);
+        preprocedure.Initialize(Size(9, 6), leftFrame, rightFrame);
+        
+        capLeft.read(leftFrame);
+        capRight.read(rightFrame);
+        waitKey(10);
+    }
     return 0;
 }

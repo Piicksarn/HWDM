@@ -7,9 +7,11 @@ void Camera::Initialize(Size size, int index){
 }
 void Camera::setFileList(int fileIndex){
     String imgFolder = to_string(fileIndex) + "/" + to_string(fileIndex) + "-";
-    for (int j = 1; j <= 19; j++) {
-        String filename = "/Users/yangenci/Desktop/";
-        filename = filename + imgFolder + to_string(j) + ".bmp";
+    String index = "";
+    fileIndex == 1 ? index = "left/" : index = "right/";
+    for (int j = 1; j <= 17; j++) {
+        String filename = "/Users/yangenci/Desktop/Data/";
+        filename = filename + index + to_string(j) + ".jpeg";
         fileList.push_back(filename);
     }
 }
