@@ -90,27 +90,26 @@ void testDMap3(Mat img_1, Mat img_2) {
     //    img_1.copyTo(target_in_big_mat);
     //    imshow("result", output);
 }
-
 int main(){
     
     // Do preprocedure
     Preprocedure preprocedure;
     
-    Mat leftFrame, rightFrame, rightRoi;
-    VideoCapture capLeft("/Users/yangenci/Desktop/left.mp4");
-    VideoCapture capRight("/Users/yangenci/Desktop/right.mp4");
+    Mat leftFrame, rightFrame, rightRoi, frame;
+    VideoCapture cap("/Users/yangenci/Desktop/piicksarn.mp4");
     
-    if (!capLeft.isOpened() || !capRight.isOpened()) {
+     if (!cap.isOpened()) {
         cout << "Cannot open the video file." << endl;
         return -1;
     }
     while(1) {
-        capLeft.read(leftFrame);
-        capRight.read(rightFrame);
-        preprocedure.Initialize(Size(9, 6), leftFrame, rightFrame);
+        cap.read(frame);
         
-        capLeft.read(leftFrame);
-        capRight.read(rightFrame);
+        Mat left = frame(Rect(frame.cols / 4, 0, frame.cols/2, frame.rows / 2));
+        Mat right = frame(Rect(frame.cols / 4, frame.rows / 2, frame.cols/2, frame.rows / 2));
+
+        preprocedure.Initialize(Size(9, 6), left, right);
+        
         waitKey(10);
     }
     return 0;

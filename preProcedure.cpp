@@ -12,20 +12,19 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
     if (status == 1) {
         leftCamera.Initialize(Size(9,6), 1);
         rightCamera.Initialize(Size(9,6), 2);
-        calibrate();
-
+        CameraCalibrate();
         imgSize = leftCamera.getImgSize();
         testStereoCalibrate();
-
     }
     else
         readPareFile();
     testStereoRectify(left, right);
+    cout<<"======================"<<endl;
 }
 
-void Preprocedure::calibrate() {
-      Mat left = imread("/Users/yangenci/Desktop/Data/left/14.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
-      Mat right = imread("/Users/yangenci/Desktop/Data/right/14.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
+void Preprocedure::CameraCalibrate() {
+      Mat left = imread("/Users/yangenci/Desktop/Data/left2/0.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
+      Mat right = imread("/Users/yangenci/Desktop/Data/right2/0.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
 
       leftCamera.calibrate(left);
       rightCamera.calibrate(right);
@@ -38,15 +37,15 @@ void Preprocedure::testStereoRectify(Mat left, Mat right) {
     Mat Q;
     Rect validRoi[2];
     stereoRectify(leftCam, leftDis, rightCam, rightDis, imgSize, rvecOfTwo, tvecOfTwo, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, 0,imgSize, &validRoi[0], &validRoi[1]);
-//    initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
-    initUndistortRectifyMap(leftCam, leftDis, Mat(), Mat(), imgSize, CV_16SC2, map1, map2);
+    initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
+//    initUndistortRectifyMap(leftCam, leftDis, Mat(), Mat(), imgSize, CV_16SC2, map1, map2);
 
     remap(img, test, map1, map2, INTER_LINEAR);
 //    cvtColor(test, test, COLOR_GRAY2BGR);
 
     Mat img2 = right;
-//    initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
-    initUndistortRectifyMap(rightCam, rightDis, Mat(), Mat(), imgSize, CV_32F, map1, map2);
+    initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
+//    initUndistortRectifyMap(rightCam, rightDis, Mat(), Mat(), imgSize, CV_32F, map1, map2);
 
     remap(img2, test2, map1, map2, INTER_LINEAR);
 //    cvtColor(test2, test2, COLOR_GRAY2BGR);
@@ -61,13 +60,13 @@ void Preprocedure::testStereoRectify(Mat left, Mat right) {
 void Preprocedure::testStereoCalibrate() {
     Mat R, T, E, F;
     double rms = stereoCalibrate(leftCamera.getObjectPoint(), leftCamera.getImgPoint(), rightCamera.getImgPoint(), leftCamera.getCameraMat(), leftCamera.getDistory(), rightCamera.getCameraMat(), rightCamera.getDistory(), imgSize, R, T, E, F, CV_CALIB_FIX_INTRINSIC,TermCriteria(TermCriteria::COUNT + TermCriteria::EPS, 30, 1e-6));
+
     rvecOfTwo = R;
     tvecOfTwo = T;
     leftCam = leftCamera.getCameraMat();
     leftDis = leftCamera.getDistory();
     rightCam = rightCamera.getCameraMat();
     rightDis = rightCamera.getDistory();
-
     writeParaFile();
 }
  Mat Preprocedure::getDisparityMap(Mat left, Mat right) {

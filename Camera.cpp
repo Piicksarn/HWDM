@@ -8,11 +8,12 @@ void Camera::Initialize(Size size, int index){
 void Camera::setFileList(int fileIndex){
     String imgFolder = to_string(fileIndex) + "/" + to_string(fileIndex) + "-";
     String index = "";
-    fileIndex == 1 ? index = "left/" : index = "right/";
-    for (int j = 1; j <= 17; j++) {
+    fileIndex == 1 ? index = "left2/" : index = "right2/";
+    for (int j = 0; j <= 21; j++) {
         String filename = "/Users/yangenci/Desktop/Data/";
         filename = filename + index + to_string(j) + ".jpeg";
         fileList.push_back(filename);
+        cout<<filename<<endl;
     }
 }
 
@@ -53,11 +54,13 @@ void Camera::addChessboardPoints(){
             srcPoints.push_back(srcCandidateCorners);
             dstPoints.push_back(dstCandidateCorners);
         }
-
+        else
+            cout<<"not found :"<<fileList[i]<<endl;
     }
 }
 
 void Camera::calibrate(Mat img){
+
     imgSize = img.size();
     Mat camMat, distCoeffs, map1, map2;
     vector<Mat> rvecs, tvecs;
@@ -66,6 +69,8 @@ void Camera::calibrate(Mat img){
     remap(img, resultImg, map1, map2, INTER_LINEAR);
     cameraMatrix = camMat;
     distCoeffsMatrix = distCoeffs;
+    cout<<"in camera calibration"<<endl;
+
     calRTvector();
 }
 void Camera::calRTvector() {
