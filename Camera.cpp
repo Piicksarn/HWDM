@@ -9,7 +9,7 @@ void Camera::setFileList(int fileIndex){
     String imgFolder = to_string(fileIndex) + "/" + to_string(fileIndex) + "-";
     String index = "";
     fileIndex == 1 ? index = "left2/" : index = "right2/";
-    for (int j = 0; j <= 21; j++) {
+    for (int j = 0; j < 25; j++) {
         String filename = "/Users/yangenci/Desktop/Data/";
         filename = filename + index + to_string(j) + ".jpeg";
         fileList.push_back(filename);
