@@ -20,7 +20,7 @@ private:
     void readPareFile();
 public:
     void Initialize(Size size, Mat left, Mat right);
-    void calibrate();
+    void CameraCalibrate();
     void imageRectification();
     Mat getDisparityMap(Mat left, Mat right);
 };

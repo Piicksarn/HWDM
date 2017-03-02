@@ -21,33 +21,33 @@ void testDMap3(Mat img_1, Mat img_2) {
     vector<Point2f> scene;
     vector<DMatch> matches;
     vector<DMatch> good_matches;
-    
+
     /*
-     
+
      ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
      | Using SURF, detect the keypoints first, and then compute the       |
      |    description, saving in the dsp1 and dsp2.                       |
      |____________________________________________________________________|
-     
+
      */
-    
+
     Ptr<xfeatures2d::SURF> surf = xfeatures2d::SURF::create();
     surf -> setHessianThreshold(50);
     surf -> detect(img_1, keyp1);
     surf -> detect(img_2, keyp2);
     surf -> compute(img_1, keyp1, dspt1);
     surf -> compute(img_2, keyp2, dspt2);
-    
+
     /*
-     
+
      ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
      | We need to select the good matching result to show.                |
      | If we didn't do the selection before using drawMatches function,   |
      |    the lines shown on the result img will too much.                |
      |____________________________________________________________________|
-     
+
      */
-    
+
     double max_dist = 0;
     double min_dist = 50;
     matcher.match( dspt1, dspt2,matches );
@@ -61,12 +61,12 @@ void testDMap3(Mat img_1, Mat img_2) {
     for(int i = 0; i < dspt1.rows; i++)
         if(matches[i].distance < 3 * min_dist)
             good_matches.push_back(matches[i]);
-    
+
     drawMatches(img_1, keyp1, img_2, keyp2,
                 good_matches, matchImg, Scalar::all(-1), Scalar::all(-1),
                 vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
     imshow("Good_Matches", matchImg);
-    
+
     //    /*
     //
     //     ⌈‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾⌉
@@ -90,27 +90,26 @@ void testDMap3(Mat img_1, Mat img_2) {
     //    img_1.copyTo(target_in_big_mat);
     //    imshow("result", output);
 }
-
 int main(){
-    
+
     // Do preprocedure
     Preprocedure preprocedure;
-    
-    Mat leftFrame, rightFrame, rightRoi;
-    VideoCapture capLeft("/Users/yangenci/Desktop/left.mp4");
-    VideoCapture capRight("/Users/yangenci/Desktop/right.mp4");
-    
-    if (!capLeft.isOpened() || !capRight.isOpened()) {
+
+    Mat leftFrame, rightFrame, rightRoi, frame;
+    VideoCapture cap("/Users/yangenci/Desktop/Data/piicksarn.mp4");
+
+     if (!cap.isOpened()) {
         cout << "Cannot open the video file." << endl;
         return -1;
     }
     while(1) {
-        capLeft.read(leftFrame);
-        capRight.read(rightFrame);
-        preprocedure.Initialize(Size(9, 6), leftFrame, rightFrame);
-        
-        capLeft.read(leftFrame);
-        capRight.read(rightFrame);
+        cap.read(frame);
+
+        Mat left = frame(Rect(frame.cols / 4, 0, frame.cols/2, frame.rows / 2));
+        Mat right = frame(Rect(frame.cols / 4, frame.rows / 2, frame.cols/2, frame.rows / 2));
+
+        preprocedure.Initialize(Size(9, 6), left, right);
+
         waitKey(10);
     }
     return 0;
