@@ -19,7 +19,7 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
     else
         readPareFile();
     testStereoRectify(left, right);
-
+    
 }
 
 void Preprocedure::CameraCalibrate() {
@@ -36,7 +36,7 @@ void Preprocedure::testStereoRectify(Mat left, Mat right) {
      * As the result of rectify is so bad, use unrectify result instead.
      * The rectify method should be modify in the future.
      */
-    
+
     Mat map1, map2, Q;
     Rect validRoi[2];
 
