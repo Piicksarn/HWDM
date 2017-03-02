@@ -8,8 +8,8 @@ void Camera::Initialize(Size size, int index){
 void Camera::setFileList(int fileIndex){
     String imgFolder = to_string(fileIndex) + "/" + to_string(fileIndex) + "-";
     String index = "";
-    fileIndex == 1 ? index = "left2/" : index = "right2/";
-    for (int j = 0; j < 25; j++) {
+    fileIndex == 1 ? index = "left4/" : index = "right4/";
+    for (int j = 1; j < 23; j++) {
         String filename = "/Users/yangenci/Desktop/Data/";
         filename = filename + index + to_string(j) + ".jpeg";
         fileList.push_back(filename);
@@ -19,24 +19,35 @@ void Camera::setFileList(int fileIndex){
 
 void Camera::addChessboardPoints(){
     vector<Point2f> srcCandidateCorners;
+    vector<Point2f> corners;
+
     vector<Point3f> dstCandidateCorners;
 
     // Initialize the dist matrix
     for(int i=0; i<borderSize.height; i++){
         for(int j=0; j<borderSize.width; j++){
-            dstCandidateCorners.push_back(Point3f(i, j, 0.0f));
+            dstCandidateCorners.push_back(Point3f(i*28, j*28, 0.0f));
         }
     }
+
 
     for (int i = 0; i < fileList.size(); i++) {
         //Read all the images for collibration and set it to gray scale
         Mat image = imread(fileList[i],CV_LOAD_IMAGE_GRAYSCALE);
 
+        Mat resized;
+        resize(image, resized, Size(image.cols * 2, image.rows * 2), 0.0, 0.0, INTER_LINEAR);
+        findChessboardCorners(resized, borderSize, corners, CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_NORMALIZE_IMAGE);
 
+          for (int k = 0; k < corners.size(); ++k) {
+              corners[k].x /= 2.0;
+              corners[k].y /= 2.0;
+              srcCandidateCorners.push_back(corners[k]);
+          }
         // @findChessboardCorners
         //    Return boolean type.
         //    The opencv function:(input image, chess board size, OutputArray corners, flags(option)).
-        findChessboardCorners(image, borderSize, srcCandidateCorners);
+        // findChessboardCorners(image, borderSize, srcCandidateCorners);
 
         // @TermCriteria (Type, maxCount, epsilon)
         //    Type: The type of termination criteria
@@ -56,24 +67,28 @@ void Camera::addChessboardPoints(){
         }
         else
             cout<<"not found :"<<fileList[i]<<endl;
+        srcCandidateCorners.clear();
     }
 }
 
 void Camera::calibrate(Mat img){
-
+    cout<<"in camera calibration"<<endl;
     imgSize = img.size();
     Mat camMat, distCoeffs, map1, map2;
     vector<Mat> rvecs, tvecs;
-    calibrateCamera(dstPoints, srcPoints, imgSize, camMat, distCoeffs, rvecs, tvecs);
+    float rms = calibrateCamera(dstPoints, srcPoints, imgSize, camMat, distCoeffs, rvecs, tvecs);
+    cout<<"rms: "<<rms;
     initUndistortRectifyMap(camMat, distCoeffs, Mat(), Mat(), imgSize, CV_32F, map1, map2);
     remap(img, resultImg, map1, map2, INTER_LINEAR);
     cameraMatrix = camMat;
     distCoeffsMatrix = distCoeffs;
-    cout<<"in camera calibration"<<endl;
 
-    calRTvector();
+
+    // calRTvector();
 }
 void Camera::calRTvector() {
+    cout<<"in calculate R and T"<<endl;
+
     vector<Point2f> srcCandidateCorners;
     vector<Point3f> dstCandidateCorners;
     for(int i=0; i<borderSize.height; i++){
@@ -83,7 +98,9 @@ void Camera::calRTvector() {
     }
 
     Mat image = resultImg.clone();
-    findChessboardCorners(image, borderSize, srcCandidateCorners);
+    bool found = findChessboardCorners(image, borderSize, srcCandidateCorners);
+    drawChessboardCorners(image, borderSize, srcCandidateCorners, found);
+    imshow("in RT", image);
     TermCriteria param(TermCriteria::MAX_ITER + TermCriteria::EPS, 30, 0.1);
     cornerSubPix(image, srcCandidateCorners, Size(5,5), Size(-1,-1), param);
     objectPoint = dstCandidateCorners;
