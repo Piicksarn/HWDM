@@ -95,9 +95,9 @@ int main(){
     // Do preprocedure
     Preprocedure preprocedure;
 
-    Mat leftFrame, rightFrame, rightRoi, frame;
+    Mat leftFrame, rightFrame, result, frame;
     VideoCapture cap("/Users/yangenci/Desktop/Data/piicksarn.mp4");
-
+    
      if (!cap.isOpened()) {
         cout << "Cannot open the video file." << endl;
         return -1;
@@ -109,6 +109,14 @@ int main(){
         Mat right = frame(Rect(frame.cols / 4, frame.rows / 2, frame.cols/2, frame.rows / 2));
 
         preprocedure.Initialize(Size(9, 6), left, right);
+        leftFrame = preprocedure.getLeft();
+        rightFrame = preprocedure.getRight();
+        
+        hconcat(leftFrame, rightFrame, result);
+        for (int j = 0; j <= result.rows; j += 12)
+            line(result, Point(0, j), Point(result.cols, j), Scalar(0, 255, 0), 1, 8);
+        
+        imshow("test-right", result);
 
         waitKey(10);
     }
