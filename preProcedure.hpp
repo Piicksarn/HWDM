@@ -14,6 +14,8 @@ private:
     Mat leftDis;
     Mat rightCam;
     Mat rightDis;
+    Mat leftResult;
+    Mat rightResult;
     void testStereoRectify(Mat left, Mat right);
     void testStereoCalibrate();
     void writeParaFile();
@@ -23,4 +25,6 @@ public:
     void CameraCalibrate();
     void imageRectification();
     Mat getDisparityMap(Mat left, Mat right);
+    Mat getRight();
+    Mat getLeft();
 };

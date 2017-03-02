@@ -41,22 +41,17 @@ void Preprocedure::testStereoRectify(Mat left, Mat right) {
 //    initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
     initUndistortRectifyMap(leftCam, leftDis, Mat(), Mat(), imgSize, CV_16SC2, map1, map2);
 
-    remap(img, test, map1, map2, INTER_LINEAR);
+    remap(left, leftResult, map1, map2, INTER_LINEAR);
 //    cvtColor(test, test, COLOR_GRAY2BGR);
 
     Mat img2 = right;
 //    initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
     initUndistortRectifyMap(rightCam, rightDis, Mat(), Mat(), imgSize, CV_32F, map1, map2);
 
-    remap(img2, test2, map1, map2, INTER_LINEAR);
+    remap(right, rightResult, map1, map2, INTER_LINEAR);
 //    cvtColor(test2, test2, COLOR_GRAY2BGR);
 
-    hconcat(test, test2, test3);
-        for (int j = 0; j <= test3.rows; j += 12)
-            line(test3, Point(0, j), Point(test3.cols, j), Scalar(0, 255, 0), 1, 8);
-
-    imshow("test-right", test3);
-    getDisparityMap(test, test2);
+    //    getDisparityMap(test, test2);
 }
 void Preprocedure::testStereoCalibrate() {
     Mat R, T, E, F;
@@ -135,4 +130,10 @@ void Preprocedure::readPareFile() {
   fs["P1"] >> P1;
   fs["P2"] >> P2;
   fs.release();
+}
+Mat Preprocedure::getLeft() {
+    return leftResult;
+}
+Mat Preprocedure::getRight() {
+    return rightResult;
 }
