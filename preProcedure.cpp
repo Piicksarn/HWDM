@@ -31,27 +31,24 @@ void Preprocedure::CameraCalibrate() {
 }
 
 void Preprocedure::testStereoRectify(Mat left, Mat right) {
-
-    Mat map1, map2, test, test2, test3;
-    Mat img = left;
-    Mat Q;
+    /*
+     * Do stereo rectify.
+     * As the result of rectify is so bad, use unrectify result instead.
+     * The rectify method should be modify in the future.
+     */
+    
+    Mat map1, map2, Q;
     Rect validRoi[2];
+
     stereoRectify(leftCam, leftDis, rightCam, rightDis, imgSize, rvecOfTwo, tvecOfTwo, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, 0.0, imgSize, &validRoi[0], &validRoi[1]);
 
-//    initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
+    //initUndistortRectifyMap(leftCam, leftDis, R1, P1, imgSize, CV_16SC2, map1, map2);
     initUndistortRectifyMap(leftCam, leftDis, Mat(), Mat(), imgSize, CV_16SC2, map1, map2);
-
     remap(left, leftResult, map1, map2, INTER_LINEAR);
-//    cvtColor(test, test, COLOR_GRAY2BGR);
 
-    Mat img2 = right;
-//    initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
+    //initUndistortRectifyMap(rightCam, rightDis, R2, P2, imgSize, CV_32F, map1, map2);
     initUndistortRectifyMap(rightCam, rightDis, Mat(), Mat(), imgSize, CV_32F, map1, map2);
-
     remap(right, rightResult, map1, map2, INTER_LINEAR);
-//    cvtColor(test2, test2, COLOR_GRAY2BGR);
-
-    //    getDisparityMap(test, test2);
 }
 void Preprocedure::testStereoCalibrate() {
     Mat R, T, E, F;
