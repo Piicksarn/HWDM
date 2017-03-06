@@ -24,7 +24,6 @@ public:
     void Initialize(Size size, Mat left, Mat right);
     void CameraCalibrate();
     void imageRectification();
-    Mat getDisparityMap(Mat left, Mat right);
     Mat getRight();
     Mat getLeft();
 };

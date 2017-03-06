@@ -11,7 +11,7 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/stitching.hpp>
 #include "preProcedure.hpp"
-
+#include "depthCreation.hpp"
 
 void testDMap3(Mat img_1, Mat img_2) {
     Mat result, dspt1, dspt2, matchImg, output;
@@ -94,10 +94,10 @@ int main(){
 
     // Do preprocedure
     Preprocedure preprocedure;
-
+    Disparity disparity;
     Mat leftFrame, rightFrame, result, frame;
     VideoCapture cap("/Users/yangenci/Desktop/Data/piicksarn.mp4");
-    
+
      if (!cap.isOpened()) {
         cout << "Cannot open the video file." << endl;
         return -1;
@@ -111,11 +111,12 @@ int main(){
         preprocedure.Initialize(Size(9, 6), left, right);
         leftFrame = preprocedure.getLeft();
         rightFrame = preprocedure.getRight();
-        
+
+        disparity.initialize(leftFrame, rightFrame);
         hconcat(leftFrame, rightFrame, result);
         for (int j = 0; j <= result.rows; j += 12)
             line(result, Point(0, j), Point(result.cols, j), Scalar(0, 255, 0), 1, 8);
-        
+
         imshow("test-right", result);
 
         waitKey(10);
