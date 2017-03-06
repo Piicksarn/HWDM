@@ -19,7 +19,6 @@ void Preprocedure::Initialize(Size size, Mat left, Mat right){
     else
         readPareFile();
     testStereoRectify(left, right);
-    
 }
 
 void Preprocedure::CameraCalibrate() {
@@ -64,39 +63,6 @@ void Preprocedure::testStereoCalibrate() {
     rightDis = rightCamera.getDistory();
     writeParaFile();
 }
- Mat Preprocedure::getDisparityMap(Mat left, Mat right) {
-
-//     left = imread("/Users/yangenci/Desktop/Data/left.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
-//     right = imread("/Users/yangenci/Desktop/Data/right.jpeg", CV_LOAD_IMAGE_GRAYSCALE);
-     Mat imgDis16S = Mat( left.rows, left.cols, CV_16S  );
-     Mat imgDisparity8U = Mat( left.rows, left.cols, CV_8UC1 );
-     int disNum = 16 * 5;
-     int size = 9;
-     Mat test;
-     Ptr<StereoBM> sbm = StereoBM::create(disNum, size);
-     sbm->setPreFilterCap(31);
-     sbm->setMinDisparity(0);
-     sbm->setNumDisparities(80);
-     sbm->setTextureThreshold(10);
-     sbm->setUniquenessRatio(5); // original setting is 15
-     sbm->setSpeckleRange(32);
-     sbm->setDisp12MaxDiff(1);
-     cvtColor(left, left, CV_BGR2GRAY, 1);
-     cvtColor(right, right, CV_BGR2GRAY, 1);
-
-     sbm->compute(left, right, imgDis16S);
-     double minVal; double maxVal;
-     minMaxLoc(imgDis16S, &minVal, &maxVal );
-     printf("Min disp: %f Max value: %f \n", minVal, maxVal);
-     //-- 4. Display it as a CV_8UC1 image
-     imgDis16S.convertTo( imgDisparity8U, CV_8UC1, 255/(maxVal - minVal));
-     imshow( "windowDisparity", imgDisparity8U );
-//
-//
-//
-     imshow("result", imgDis16S);
-     return imgDis16S;
- }
  void Preprocedure::writeParaFile() {
     FileStorage fs("/Users/yangenci/git/HWDM/paraData.yml", FileStorage::WRITE);
     fs << "left Camera Mat" << leftCamera.getCameraMat();
