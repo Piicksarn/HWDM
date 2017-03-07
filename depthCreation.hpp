@@ -9,6 +9,7 @@
  #include "opencv2/highgui.hpp"
  #include "opencv2/core/utility.hpp"
  using namespace cv;
+using namespace std;
 
  class Disparity{
  private:
@@ -16,7 +17,10 @@
    Mat right_img;
    void compute_disp();
    void optimization();
-
+   void filtering_rough();
+   void filtering_detail();
+   Mat detail_result;
+   Mat rough_result;
  public:
    void initialize(Mat left, Mat right);
 
