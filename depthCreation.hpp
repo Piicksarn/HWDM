@@ -23,5 +23,5 @@ using namespace std;
    Mat rough_result;
  public:
    void initialize(Mat left, Mat right);
-
+   Mat get_result();
  };

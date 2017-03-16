@@ -31,16 +31,17 @@ void Disparity::filtering_rough() {
     double vis_mult = 1.0;
     double lambda = 9000;
     double sigma = 1.5;
-    
+
     left = left_img.clone();
     right = right_img.clone();
-    
+
     Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
     Ptr<StereoMatcher> right_matcher = createRightMatcher(left_matcher);
-    
+
     wls_filter = createDisparityWLSFilter(left_matcher);
     left_matcher-> compute(left, right, left_disp);
     right_matcher-> compute(right, left, right_disp);
+
     wls_filter->setLambda(lambda);
     wls_filter->setSigmaColor(sigma);
     wls_filter->filter(left_disp, left_img, filtered_disp, right_disp);
@@ -61,14 +62,15 @@ void Disparity::filtering_detail() {
     double vis_mult = 1.0;
     double lambda = 9000;
     double sigma = 1.5;
-    
+
     left = left_img.clone();
     right = right_img.clone();
+
     
 //    Ptr<StereoBM> matcher  = StereoBM::create(max_disp, wsize);
 //    matcher-> setTextureThreshold(10);
 //    matcher-> setUniquenessRatio(0);
-//    
+//
 //    wls_filter = createDisparityWLSFilterGeneric(false);
 //    wls_filter-> setDepthDiscontinuityRadius((int)ceil(0.33 * wsize));
 //    
@@ -84,10 +86,11 @@ void Disparity::filtering_detail() {
     wls_filter->setDepthDiscontinuityRadius((int)ceil(0.5*wsize));
     
     matcher->compute(left,right,left_disp);
+
     wls_filter-> setLambda(lambda);
     wls_filter-> setSigmaColor(sigma);
     wls_filter-> filter(left_disp, left_img, filtered_disp, Mat(), Rect());
-    
+
     getDisparityVis(filtered_disp, detail_result, vis_mult);
     double minVal; double maxVal;
     minMaxLoc(detail_result, &minVal, &maxVal );
@@ -96,4 +99,8 @@ void Disparity::filtering_detail() {
 }
 
 void Disparity::optimization() {
+}
+
+Mat Disparity::get_result() {
+    return detail_result;
 }
