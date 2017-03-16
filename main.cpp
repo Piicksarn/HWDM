@@ -102,9 +102,11 @@ int main(){
         cout << "Cannot open the video file." << endl;
         return -1;
     }
+    int count = 0;
     while(1) {
         cap.read(frame);
         if(!frame.empty()) {
+
             Mat left = frame(Rect(frame.cols / 4, 0, frame.cols/2, frame.rows / 2));
             Mat right = frame(Rect(frame.cols / 4, frame.rows / 2, frame.cols/2, frame.rows / 2));
             
@@ -117,11 +119,15 @@ int main(){
             for (int j = 0; j <= result.rows; j += 12)
                 line(result, Point(0, j), Point(result.cols, j), Scalar(0, 255, 0), 1, 8);
             
+            putText(result, to_string(count), Point(100,100), 0, 1, Scalar(0,0,255), 7);
             imshow("test-right", result);
+            imshow("result", disparity.get_result());
+            count ++;
         }
         else
             break;
-        waitKey(10);
+        waitKey();
+
     }
     return 0;
 }
