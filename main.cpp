@@ -104,7 +104,7 @@ int main(){
         return -1;
     }
     int count = 0;
-    Capture capture = Capture(Mat(), Mat());;
+    Capture capture;
     while(1) {
         cap.read(frame);
         if(!frame.empty()) {
@@ -117,16 +117,19 @@ int main(){
             rightFrame = preprocedure.getRight();
 
             disparity.initialize(leftFrame,  rightFrame);
-            capture.update_frame(leftFrame, disparity.get_result());
-            if(count > 2)
-              capture.cal_roi();
+            if(count == 0)
+                capture.initialize(disparity.get_result(), leftFrame);
+            else
+                capture.update_frame(leftFrame, disparity.get_result());
+            if(count > 1)
+                capture.cal_roi();
 
             hconcat(leftFrame, rightFrame, result);
             for (int j = 0; j <= result.rows; j += 12)
                 line(result, Point(0, j), Point(result.cols, j), Scalar(0, 255, 0), 1, 8);
 
             putText(result, to_string(count), Point(100,100), 0, 1, Scalar(0,0,255), 7);
-            imshow("test-right", result);
+            // imshow("test-right", result);
             imshow("result", disparity.get_result());
             count ++;
         }

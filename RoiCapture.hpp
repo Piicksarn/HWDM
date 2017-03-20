@@ -11,9 +11,9 @@ private:
     Mat pre_image;
     Mat pre_disp;
     void getNiceFgMask(Mat fgmask);
-    Mat getNiceContour( Mat fgmask, Mat left);
+    Mat getNiceContour( Mat fgmask, Mat left, int i);
 public:
-    Capture(Mat stereo, Mat left);
+    void initialize(Mat stereo, Mat left);
     void update_frame(Mat new_img, Mat new_disp);
     void cal_roi();
 };
