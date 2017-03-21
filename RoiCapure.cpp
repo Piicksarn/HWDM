@@ -18,6 +18,7 @@ void Capture::cal_roi() {
     absdiff(disp_map, pre_disp, disp_diff);
     absdiff(source, pre_image, src_diff);
 
+    Mat temp = src_diff.clone();
     getNiceFgMask(disp_diff);
     getNiceFgMask(src_diff);
 
@@ -25,6 +26,7 @@ void Capture::cal_roi() {
 
     threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
 
+    src_diff = src_diff & temp;
     imshow("both_diff", both_diff);
     imshow("src_diff", src_diff);
     imshow("disp_diff", disp_diff);

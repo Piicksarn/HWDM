@@ -20,7 +20,7 @@ int main(){
     Preprocedure preprocedure;
     Disparity disparity;
     Mat leftFrame, rightFrame, result, frame;
-    VideoCapture cap("/Users/yangenci/Desktop/Data/piicksarn.mp4");
+    VideoCapture cap("/Users/yangenci/Desktop/Data/piicksarn2.mp4");
 
     if (!cap.isOpened()) {
         cout << "Cannot open the video file." << endl;
