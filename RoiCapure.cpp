@@ -42,11 +42,6 @@ void Capture::cal_roi() {
     Mat both_diff = disp_diff & src_diff;
     threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
 
-    // src_diff = src_diff & temp;
-    // imshow("both_diff", both_diff);
-    // imshow("src_diff", src_diff);
-    // imshow("disp_diff", disp_diff);
-
     Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
     Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
     roi_check(disp_roi, src_roi, pre_disp);
@@ -102,13 +97,5 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
 
         }
     }
-//    rectangle(dist, bounding_rect, Scalar(0,255,0), 1, 8, 0);
-//    if(i==1){
-//        Mat temp = left.clone();
-//        rectangle(temp, bounding_rect, Scalar(0,255,0), 1, 8, 0);
-//        imshow("in disparity map", temp);
-//
-//    }
-//    imshow("cont result"+to_string(i), dist);
     return bounding_rect;
 }
