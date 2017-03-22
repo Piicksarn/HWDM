@@ -15,6 +15,7 @@ private:
     void getNiceFgMask(Mat fgmask);
     Rect getNiceContour( Mat fgmask, Mat left, int i);
     void roi_check(Rect roi_d, Rect roi_src, Mat img);
+    bool in_bound(Rect inner, Rect outer);
 public:
     void initialize(Mat stereo, Mat left);
     void update_frame(Mat new_img, Mat new_disp);

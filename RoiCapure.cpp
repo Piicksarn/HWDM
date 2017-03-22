@@ -31,7 +31,6 @@ void Capture::cal_roi() {
 
     Mat temp = src_diff.clone();
 
-
     threshold(src_diff, src_diff, 20, 255, THRESH_BINARY);
     threshold(disp_diff, disp_diff, 10, 255, THRESH_BINARY);
     equalizeHist(disp_diff, disp_diff);
@@ -44,7 +43,8 @@ void Capture::cal_roi() {
 
     Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
     Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
-    roi_check(disp_roi, src_roi, pre_disp);
+
+    roi_check(disp_roi, src_roi, pre_image);
 }
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
   /* 1. Check roi_d and roi_src exist.
@@ -53,13 +53,25 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
    * 4. Draw the roi_src on img
    */
     cvtColor(img, img, CV_GRAY2BGR);
-    rectangle(img, roi_d, Scalar(0,255,0), 1, 8, 0);
-    rectangle(img, roi_src, Scalar(255,255,0), 1, 8, 0);
-
+    cout<<"roi_d size:"<<roi_d.size()<<endl;
+    if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
+        rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
+        rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
+    }
+//    else {
+//      rectangle(img, roi_d, Scalar(0, 0, 255), 1, 8, 0);
+//      rectangle(img, roi_src, Scalar(0, 30, 255), 1, 8, 0);
+//      circle(img, roi_d.tl(), 5, Scalar(0,255,0));
+//    }
     imshow("roi_result", img);
-
 }
-
+bool Capture::in_bound(Rect inner, Rect outer) {
+    if (inner.tl().x < outer.tl().x || inner.br().x > outer.br().x)
+        return false;
+    if (inner.tl().y < outer.tl().y || inner.br().y > outer.br().y)
+        return false;
+    return true;
+}
 void Capture::getNiceFgMask(Mat fgmask) {
     Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
     GaussianBlur(fgmask, fgmask, Size(5, 5), 6, 0);
@@ -77,14 +89,16 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
     int largest_area = 0;
     int largest_contour_index = 0;
     Rect bounding_rect;
-
+    vector<Vec4i> hierarchy;
     getNiceFgMask(fgmask);
     equalizeHist(fgmask, fgmask);
     Mat dist = fgmask.clone(); // For the drawing contours.
     Mat imageROI = Mat(fgmask.size(), CV_8UC1, Scalar(0,0,0)); // For saving roi image.
 
     vector<vector<Point>> contours;
-    findContours(fgmask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+//    findContours(fgmask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    findContours(fgmask, contours, CV_FILLED, CV_CHAIN_APPROX_NONE);
+
     vector<Rect> boundRect(contours.size());
     cvtColor(dist, dist, CV_GRAY2BGR);
     for(int i = 0; i < contours.size(); i++) // Iterate through each contour
@@ -94,8 +108,8 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
             largest_area = a;
             largest_contour_index = i; // Store the index of largest contour
             bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
-
         }
+        // drawContours(pre_image, contours, i, Scalar(0, 0, 0), CV_FILLED, 8, hierarchy);
     }
     return bounding_rect;
 }
