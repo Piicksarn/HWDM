@@ -52,11 +52,12 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
    * 3. Check roi_d and roi_src bouded each other
    * 4. Draw the roi_src on img
    */
+    PWDS pwds;
     cvtColor(img, img, CV_GRAY2BGR);
-    cout<<"roi_d size:"<<roi_d.size()<<endl;
     if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
         rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
         rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
+        pwds.set_image(img(roi_d));
     }
 //    else {
 //      rectangle(img, roi_d, Scalar(0, 0, 255), 1, 8, 0);
