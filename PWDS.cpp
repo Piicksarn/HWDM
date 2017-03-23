@@ -40,7 +40,7 @@ double PWDS::get_up_bound() {
 }
 
 float PWDS::cal_gaussain(int xi, int x) {
-  double result = exp(-0.5 * pow((x - xi), 2) / pop(sigma, 2));
+  double result = exp(-0.5 * pow((x - xi), 2) / pow(sigma, 2));
   return result / (sqrt(2 * M_PI) * sigma);
 }
 
