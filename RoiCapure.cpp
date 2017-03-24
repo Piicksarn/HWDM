@@ -41,10 +41,16 @@ void Capture::cal_roi() {
     Mat both_diff = disp_diff & src_diff;
     threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
 
+
     Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
     Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
 
-    roi_check(disp_roi, src_roi, pre_image);
+    threshold(both_diff, both_diff, 200, 255, THRESH_BINARY);
+    mask = pre_disp.clone();
+    mask.copyTo(both_diff, both_diff);
+    mask = both_diff;
+
+    roi_check(disp_roi, src_roi, pre_disp);
 }
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
   /* 1. Check roi_d and roi_src exist.
@@ -57,7 +63,7 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
     if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
         rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
         rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
-        pwds.set_image(img(roi_d));
+        pwds.set_image(mask(roi_d));
     }
 //    else {
 //      rectangle(img, roi_d, Scalar(0, 0, 255), 1, 8, 0);
@@ -83,7 +89,6 @@ void Capture::getNiceFgMask(Mat fgmask) {
     GaussianBlur(fgmask, fgmask, Size(5, 5), 3, 0);
     morphologyEx(fgmask, fgmask, MORPH_ERODE, element);
     morphologyEx(fgmask, fgmask, MORPH_ERODE, element);
-
 }
 Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
 
@@ -97,7 +102,6 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
     Mat imageROI = Mat(fgmask.size(), CV_8UC1, Scalar(0,0,0)); // For saving roi image.
 
     vector<vector<Point>> contours;
-//    findContours(fgmask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
     findContours(fgmask, contours, CV_FILLED, CV_CHAIN_APPROX_NONE);
 
     vector<Rect> boundRect(contours.size());
@@ -110,7 +114,8 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
             largest_contour_index = i; // Store the index of largest contour
             bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
         }
-        // drawContours(pre_image, contours, i, Scalar(0, 0, 0), CV_FILLED, 8, hierarchy);
     }
+    drawContours(fgmask, contours, largest_contour_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
+
     return bounding_rect;
 }

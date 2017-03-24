@@ -14,6 +14,7 @@ private:
     Mat pre_disp;
     Mat old_disp;
     Mat old_image;
+    Mat mask;
     int frame_index;
     void getNiceFgMask(Mat fgmask);
     Rect getNiceContour( Mat fgmask, Mat left, int i);
@@ -40,10 +41,10 @@ public:
 
 class PWDS {
 private:
-    double sigma = 2;
+    double sigma = 1;
     int window_size = 5;
     Mat image;
-    float cal_window(Mat window, uchar *xfloat);
+    float cal_window(Mat window, int i);
     void density_estimate();
     float cal_gaussain(int xi, int x);
 
