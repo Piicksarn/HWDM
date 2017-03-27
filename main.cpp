@@ -58,7 +58,6 @@ int main(){
             
             putText(result, to_string(count), Point(100,100), 0, 1, Scalar(0,0,255), 7);
             // imshow("test-right", result);
-            imshow("result", disparity.get_result());
             count ++;
         }
         else
