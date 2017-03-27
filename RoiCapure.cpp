@@ -44,13 +44,30 @@ void Capture::cal_roi() {
 
     Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
     Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
-
-    threshold(both_diff, both_diff, 200, 255, THRESH_BINARY);
+    threshold(src_diff, both_diff, 200, 255, THRESH_BINARY);
     mask = pre_disp.clone();
     mask.copyTo(both_diff, both_diff);
     mask = both_diff;
 
     roi_check(disp_roi, src_roi, pre_disp);
+
+
+
+    if(src_roi.area() > 0) {
+    Mat test = pre_image.clone();
+    test = test(Rect(src_roi));
+    testk(test);
+    }
+
+}
+
+void Capture::testk(Mat src) {
+    Mat result;
+    cvtColor(src, src, CV_GRAY2BGR);
+//
+    pyrMeanShiftFiltering(src, result, 30, 20, 3);
+    imshow("result66", result);
+//    cout<<src.channels();
 }
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
   /* 1. Check roi_d and roi_src exist.
@@ -64,6 +81,7 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
         rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
         rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
         pwds.set_image(mask(roi_d));
+        pwds.get_foreground(mask(roi_src));
     }
 //    else {
 //      rectangle(img, roi_d, Scalar(0, 0, 255), 1, 8, 0);
@@ -116,6 +134,5 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
         }
     }
     drawContours(fgmask, contours, largest_contour_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
-
     return bounding_rect;
 }

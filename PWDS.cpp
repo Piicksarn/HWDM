@@ -62,22 +62,28 @@ void PWDS::get_key_pob() {
 
     double area = 0;
     for (int i = 255; i >= 0; i--) {
-        if(area <= 0.7)
+        if(area <= 0.55)
             area += gray_popu_val[i].y;
         else {
             key_gray_val = i;
             break;
         }
     }
-    cout<<"threshold: "<< index <<endl;
-    uchar *ptr = &image.at<uchar>(0, 0);
-    for (int c = 0; c < image.cols; c++) {
-        for (int r = 0; r < image.rows; r++) {
-            ptr = &image.at<uchar>(r, c);
-            if ((int)(*ptr) < key_gray_val) {
-                (*ptr) = 0;
-            }
-        }
-    }
+    cout<<"threshold: "<< key_gray_val<<endl;
     imshow("result of th", image);
+}
+
+Mat PWDS::get_foreground(Mat input_img) {
+  Mat img = input_img.clone();
+  uchar *ptr = &img.at<uchar>(0, 0);
+  for (int c = 0; c < img.cols; c++) {
+      for (int r = 0; r < img.rows; r++) {
+          ptr = &img.at<uchar>(r, c);
+          if ((int)(*ptr) < key_gray_val) {
+              (*ptr) = 0;
+          }
+      }
+  }
+  imshow("Get foreground in PWDS", img);
+  return img;
 }

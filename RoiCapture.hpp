@@ -20,6 +20,7 @@ private:
     Rect getNiceContour( Mat fgmask, Mat left, int i);
     void roi_check(Rect roi_d, Rect roi_src, Mat img);
     bool in_bound(Rect inner, Rect outer);
+    void testk(Mat src);
 public:
     void initialize(Mat stereo, Mat left);
     void update_frame(Mat new_img, Mat new_disp);
@@ -37,8 +38,8 @@ public:
     Point get_pos();
     double get_width();
     double get_height();
-};
 
+};
 class PWDS {
 private:
     double sigma = 1;
@@ -49,9 +50,10 @@ private:
     void density_estimate();
     float cal_gaussain(int xi, int x);
     vector<Point2f> gray_popu_val;
-public:
+  public:
     void set_image(Mat img);
     void get_key_pob();
     double get_low_bound();
     double get_up_bound();
+    Mat get_foreground(Mat input_img);
 };
