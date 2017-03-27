@@ -3,17 +3,15 @@
 void PWDS::set_image(Mat img) {
     image = img;
     imshow("source", img);
+    cout<<"img a size:"<<img.rows <<" * "<<img.cols;
     density_estimate();
+    get_key_pob();
 }
 void PWDS::density_estimate() {
-    uchar *ptr = &image.at<uchar>(0, 0);
-    vector<Point2f> gray_popu_val;
     float result = 0;
     for (int i = 0; i < 256; i++) {
         result = cal_window(image, i);
-
         gray_popu_val.push_back(Point2f((float)i, result));
-        cout<< i<< " : "<< result<<endl;
     }
     float test = 0;
     float total = 0;
@@ -22,14 +20,10 @@ void PWDS::density_estimate() {
     for (int i = 0; i < gray_popu_val.size(); i++) {
         total += gray_popu_val[i].y;
     }
-      for (int i = 0; i < gray_popu_val.size(); i++) {
-//          float val = (gray_popu_val[i].y / total);
-//          cout<<"val:"<<val<<endl;
-          line(showHistImg, Point((int)i, (int)((1-gray_popu_val[i].y*10)*100)), Point((int)gray_popu_val[i].x, 99), Scalar(23, 120, 35));
-//          test += val;
-      }
-      imshow("test", showHistImg);
-
+    for (int i = 0; i < gray_popu_val.size(); i++) {
+        line(showHistImg, Point((int)i, (int)((1-gray_popu_val[i].y*10)*100)), Point((int)gray_popu_val[i].x, 99), Scalar(23, 120, 35));
+    }
+    imshow("test", showHistImg);
     cout<<"(should be 1)total:"<<total<<endl;
 }
 float PWDS::cal_window(Mat window, int i) {
@@ -39,11 +33,11 @@ float PWDS::cal_window(Mat window, int i) {
 
     for (int c = 0; c < window.cols; c++) {
         for (int r = 0; r < window.rows; r++) {
+            ptr = &image.at<uchar>(r, c);
             if ((int)(*ptr) != 0) {
-              sum += cal_gaussain((int)(*ptr), i);
-              amount++;
+                sum += cal_gaussain((int)(*ptr), i);
+                amount++;
             }
-            ptr++;
         }
     }
     amount -= 1;
@@ -63,7 +57,27 @@ float PWDS::cal_gaussain(int xi, int x) {
     return result / (sqrt(2 * M_PI) * sigma);
 }
 
-double PWDS::get_pob() {
+void PWDS::get_key_pob() {
+    cout<<"img a size:"<<image.rows <<" * "<<image.cols;
 
-    return 0;
+    double area = 0;
+    for (int i = 255; i >= 0; i--) {
+        if(area <= 0.7)
+            area += gray_popu_val[i].y;
+        else {
+            key_gray_val = i;
+            break;
+        }
+    }
+    cout<<"threshold: "<< index <<endl;
+    uchar *ptr = &image.at<uchar>(0, 0);
+    for (int c = 0; c < image.cols; c++) {
+        for (int r = 0; r < image.rows; r++) {
+            ptr = &image.at<uchar>(r, c);
+            if ((int)(*ptr) < key_gray_val) {
+                (*ptr) = 0;
+            }
+        }
+    }
+    imshow("result of th", image);
 }

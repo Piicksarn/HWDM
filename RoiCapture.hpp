@@ -43,14 +43,15 @@ class PWDS {
 private:
     double sigma = 1;
     int window_size = 5;
+    double key_gray_val = 0;
     Mat image;
     float cal_window(Mat window, int i);
     void density_estimate();
     float cal_gaussain(int xi, int x);
-
+    vector<Point2f> gray_popu_val;
 public:
     void set_image(Mat img);
-    double get_pob();
+    void get_key_pob();
     double get_low_bound();
     double get_up_bound();
 };
