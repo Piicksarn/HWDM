@@ -1,10 +1,10 @@
 #include "Roicapture.hpp"
-
 void Capture::initialize(Mat stereo, Mat left) {
-     source = left;
-     disp_map = stereo;
-     old_disp = stereo;
-     old_image = stereo;
+    source = left;
+    disp_map = stereo;
+    old_disp = stereo;
+    old_image = stereo;
+    imshow("test-stereo", stereo);
 }
 
 void Capture::update_frame(Mat new_img, Mat new_disp) {
@@ -49,46 +49,107 @@ void Capture::cal_roi() {
     mask.copyTo(both_diff, both_diff);
     mask = both_diff;
 
-    roi_check(disp_roi, src_roi, pre_disp);
-
-
-
-    if(src_roi.area() > 0) {
-    Mat test = pre_image.clone();
-    test = test(Rect(src_roi));
-    testk(test);
+    if(target.empty()) {
+        roi_check(disp_roi, src_roi, pre_disp);
     }
+    else {
+        do_tracking();
+    }
+
+
+
+    // if(src_roi.area() > 0) {
+    // Mat test = pre_image.clone();
+    // test = test(Rect(src_roi));
+    // testk(test);
+    // }
 
 }
 
 void Capture::testk(Mat src) {
-    Mat result;
-    cvtColor(src, src, CV_GRAY2BGR);
-//
-    pyrMeanShiftFiltering(src, result, 30, 20, 3);
-    imshow("result66", result);
-//    cout<<src.channels();
+    Mat img = src.clone();
+    cvtColor(img, img, CV_GRAY2BGR);
+    pyrMeanShiftFiltering(img, img, 30, 20, 3);
+    imshow("result66", img );
+
+    //    cout<<src.channels();
 }
-void Capture::roi_check(Rect roi_d, Rect roi_src, Mat img) {
-  /* 1. Check roi_d and roi_src exist.
-   * 2. Check roi_d and roi_src area raio not less than 0.15
-   * 3. Check roi_d and roi_src bouded each other
-   * 4. Draw the roi_src on img
-   */
+void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
     PWDS pwds;
+    Mat fore_mask;
+    Mat img = src.clone();
     cvtColor(img, img, CV_GRAY2BGR);
     if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
         rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
         rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
-        pwds.set_image(mask(roi_d));
-        pwds.get_foreground(mask(roi_src));
+        pwds.set_image(mask(roi_d), 0.55);
+        fore_mask = pwds.get_foreground(mask(roi_d));
+        threshold(fore_mask, fore_mask, 10, 255, THRESH_BINARY);
+        pwds.set_image(set_target(fore_mask, roi_d, pre_image), 0.85);
+        fore_mask = pwds.get_foreground(set_target(fore_mask, roi_d, pre_image));
+        threshold(fore_mask, fore_mask, 10, 255, THRESH_BINARY);
+        target = set_target(fore_mask, roi_d, pre_image);
+        tar_roi = roi_d;
+        thre_val = pwds.get_key_val();
     }
-//    else {
-//      rectangle(img, roi_d, Scalar(0, 0, 255), 1, 8, 0);
-//      rectangle(img, roi_src, Scalar(0, 30, 255), 1, 8, 0);
-//      circle(img, roi_d.tl(), 5, Scalar(0,255,0));
-//    }
-    imshow("roi_result", img);
+    // imshow("roi_result", set_target(fore_mask, roi_d, pre_image));
+}
+
+Mat Capture::set_target(Mat mask, Rect Roi, Mat src) {
+    threshold(mask, mask, 10, 255, THRESH_BINARY);
+    Mat result;
+    Mat image = src(Roi).clone();
+    image.copyTo(result, mask);
+    return result;
+}
+
+void Capture::do_tracking() {
+    PSO pso;
+    pso.initialize(target, pre_image, tar_roi, thre_val);
+    pso.training();
+    update_target(pso.get_result());
+}
+void Capture::update_target(Rect new_target) {
+    imshow("test-stereo", pre_disp);
+    imshow("test-image", pre_image);
+
+/* ===========================================
+    the next target ---
+
+==============================================*/
+    Mat roi = pre_image(new_target);
+    Mat test = pre_disp(new_target);
+    Mat img, mask;
+    threshold(roi, mask, thre_val, 255, THRESH_BINARY);
+    pre_image(new_target).copyTo(img, mask);
+    Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
+    imshow("img--~",img);
+    morphologyEx(img, img, MORPH_ERODE, element);
+    imshow("img--~ erode",img);
+    morphologyEx(img, img, MORPH_DILATE, element);
+    imshow("img--~ dilate",img);
+
+
+
+    // Calculate PWDS of roi
+    PWDS pwds;
+    pwds.set_image(img, 0.8);
+    cout<<"done setting"<<endl;
+    //    img = pwds.get_foreground(img);
+    thre_val = pwds.get_key_val();
+    //    pre_image(new_target).copyTo(img, mask);
+    cout<<"done set value"<<endl;
+    img = pwds.get_foreground(img);
+    threshold(img, mask, thre_val, 255, THRESH_BINARY);
+    pre_image(new_target).copyTo(img, mask);
+
+    tar_roi = new_target;
+    target = img;
+
+    Mat show = pre_image.clone();
+    cvtColor(show, show, CV_GRAY2BGR);
+    rectangle(show, new_target, Scalar(255, 255, 0), 1, 8, 0);
+    imshow("test", show);
 }
 bool Capture::in_bound(Rect inner, Rect outer) {
     if (inner.tl().x < outer.tl().x || inner.br().x > outer.br().x)

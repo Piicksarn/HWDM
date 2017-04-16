@@ -1,14 +1,14 @@
 #include "Roicapture.hpp"
 
-void PWDS::set_image(Mat img) {
+void PWDS::set_image(Mat img, double bound_val) {
     image = img;
-    imshow("source", img);
-    cout<<"img a size:"<<img.rows <<" * "<<img.cols;
+    bound = bound_val;
     density_estimate();
     get_key_pob();
 }
 void PWDS::density_estimate() {
     float result = 0;
+    gray_popu_val.clear();
     for (int i = 0; i < 256; i++) {
         result = cal_window(image, i);
         gray_popu_val.push_back(Point2f((float)i, result));
@@ -23,8 +23,7 @@ void PWDS::density_estimate() {
     for (int i = 0; i < gray_popu_val.size(); i++) {
         line(showHistImg, Point((int)i, (int)((1-gray_popu_val[i].y*10)*100)), Point((int)gray_popu_val[i].x, 99), Scalar(23, 120, 35));
     }
-    imshow("test", showHistImg);
-    cout<<"(should be 1)total:"<<total<<endl;
+    // imshow("test", showHistImg);
 }
 float PWDS::cal_window(Mat window, int i) {
     uchar *ptr = &window.at<uchar>(0, 0);
@@ -58,19 +57,16 @@ float PWDS::cal_gaussain(int xi, int x) {
 }
 
 void PWDS::get_key_pob() {
-    cout<<"img a size:"<<image.rows <<" * "<<image.cols;
-
+    // cout<<"img a size:"<<image.rows <<" * "<<image.cols;
     double area = 0;
     for (int i = 255; i >= 0; i--) {
-        if(area <= 0.55)
+        if(area <= bound)
             area += gray_popu_val[i].y;
         else {
             key_gray_val = i;
             break;
         }
     }
-    cout<<"threshold: "<< key_gray_val<<endl;
-    imshow("result of th", image);
 }
 
 Mat PWDS::get_foreground(Mat input_img) {
@@ -84,6 +80,19 @@ Mat PWDS::get_foreground(Mat input_img) {
           }
       }
   }
-  imshow("Get foreground in PWDS", img);
+  img = morphology_fore(img);
   return img;
+}
+Mat PWDS::morphology_fore(Mat src) {
+  Mat img = src.clone();
+  Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
+  GaussianBlur(img, img, Size(5, 5), 6, 0);
+  morphologyEx(img, img, MORPH_DILATE, element);
+  morphologyEx(img, img, MORPH_ERODE, element);
+  morphologyEx(img, img, MORPH_ERODE, element);
+
+  return img;
+}
+double PWDS::get_key_val() {
+    return key_gray_val;
 }
