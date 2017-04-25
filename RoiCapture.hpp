@@ -20,12 +20,15 @@ private:
     int frame_index;
     double thre_val;
     int stereo_thre_val;
+    int image_thre_val;
+    vector<Point> path;
     void getNiceFgMask(Mat fgmask);
     Rect getNiceContour( Mat fgmask, Mat left, int i);
     void roi_check(Rect roi_d, Rect roi_src, Mat src);
     bool in_bound(Rect inner, Rect outer);
     Mat set_target(Mat mask, Rect Roi, Mat src);
     void do_tracking();
+    Mat get_foreground();
     Rect update_roi(Rect roi);
     void update_target(Rect new_target);
 public:

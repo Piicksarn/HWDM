@@ -1,9 +1,9 @@
 #include "Tracking.hpp"
 
-void Agent::initialize(Rect goal_rect, Mat img, vector<int> g_seq, double threshold_val) {
+void Agent::initialize(Rect goal_rect, Mat img, vector<int> g_seq, double threshold_val, Mat fore) {
     goal = goal_rect;
     goal_seq = g_seq;
-    src = img;
+    src = fore;
     best_val = (double)INT_MAX;
     gray_thre_val = threshold_val;
     set_position();
@@ -30,11 +30,11 @@ void Agent::set_velocity() {
 }
 void Agent::set_sequence() {
     // Get the region of agent point using position
-    Mat img_s = src(Rect(position.x, position.y, goal.width, goal.height));
-    Mat img, mask;
-    threshold(img_s, mask, gray_thre_val, 255, THRESH_BINARY);
-    img_s.copyTo(img, mask);
-
+    // Mat img_s = src(Rect(position.x, position.y, goal.width, goal.height));
+    // Mat img, mask;
+    // threshold(img_s, mask, gray_thre_val, 255, THRESH_BINARY);
+    // img_s.copyTo(img, mask);
+    Mat img = src(Rect(position.x, position.y, goal.width, goal.height)).clone();
     // Set the sequence for the region of agents
     vector<int> list;
     uchar *ptr = &img.at<uchar>(0, 0);
@@ -111,7 +111,4 @@ Point Agent::get_position() {
 }
 double Agent::get_fitness() {
     return fitness;
-}
-Mat Agent::get_img() {
-    return src(Rect(position.x, position.y, goal.width, goal.height));
 }

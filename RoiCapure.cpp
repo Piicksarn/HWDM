@@ -40,7 +40,10 @@ void Capture::cal_roi() {
 
     Mat both_diff = disp_diff & src_diff;
     threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
-
+    Mat result3;
+    hconcat(src_diff, disp_diff, result3);
+    hconcat(result3, both_diff, result3);
+    imshow("different", result3);
 
     Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
     Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
@@ -49,24 +52,27 @@ void Capture::cal_roi() {
     mask.copyTo(both_diff, both_diff);
     mask = both_diff;
 
-    if(target.empty()) {
-        roi_check(disp_roi, src_roi, pre_disp);
-    }
-    else {
-        do_tracking();
-    }
+
+   if(target.empty()) {
+       roi_check(disp_roi, src_roi, pre_disp);
+   }
+   else {
+       do_tracking();
+   }
 }
 
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
     PWDS pwds;
     Mat fore_mask;
     Mat img = src.clone();
+
     cvtColor(img, img, CV_GRAY2BGR);
     if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
         rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
         rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
         pwds.set_image(mask(roi_d), 0.55);
         fore_mask = pwds.get_foreground(mask(roi_d));
+        stereo_thre_val = pwds.get_key_val();
         threshold(fore_mask, fore_mask, 10, 255, THRESH_BINARY);
         pwds.set_image(set_target(fore_mask, roi_d, pre_image), 0.85);
         fore_mask = pwds.get_foreground(set_target(fore_mask, roi_d, pre_image));
@@ -74,6 +80,7 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
         target = set_target(fore_mask, roi_d, pre_image);
         tar_roi = roi_d;
         thre_val = pwds.get_key_val();
+        image_thre_val = pwds.get_key_val();
     }
 }
 
@@ -86,52 +93,109 @@ Mat Capture::set_target(Mat mask, Rect Roi, Mat src) {
 }
 
 void Capture::do_tracking() {
-    PSO pso;
-    pso.initialize(target, pre_image, tar_roi, thre_val);
-    pso.training();
-    update_target(pso.get_result());
+    Mat search_image = get_foreground();
+//     if(target.empty())
+//         target = search_image(tar_roi);
+     PSO pso;
+     pso.initialize(target, pre_image, tar_roi, thre_val, search_image);
+     pso.training();
+//    Mat integral_image;
+//    integral(search_image, integral_image);
+
+     update_target(pso.get_result());
+}
+
+Mat Capture::get_foreground() {
+    Mat stereo = pre_disp.clone();
+    Mat image = pre_image.clone();
+    Mat result;
+    threshold(stereo, stereo, stereo_thre_val, 255, THRESH_BINARY);
+    image.copyTo(result, stereo);
+    threshold(result, result, image_thre_val, 255, THRESH_BINARY);
+    Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
+    morphologyEx(result, result, MORPH_ERODE, element);
+    morphologyEx(result, result, MORPH_DILATE, element);
+    morphologyEx(result, result, MORPH_DILATE, element);
+    morphologyEx(result, result, MORPH_ERODE, element);
+    image.copyTo(result, result);
+    imshow("dst", result);
+
+    return result;
 }
 void Capture::update_target(Rect new_target) {
-    imshow("test-stereo", pre_disp);
-    imshow("test-image", pre_image);
 
-/* ===========================================
-    the next target ---
+    Mat stereo = pre_disp(new_target);
+    Mat image = pre_image(new_target);
+    imshow("test-stereo", stereo);
+    imshow("test-image", image);
+    imshow("stereo", pre_disp);
 
-==============================================*/
-    Mat roi = pre_image(new_target);
-    Mat test = pre_disp(new_target);
-    Mat img, mask;
-    threshold(roi, mask, thre_val, 255, THRESH_BINARY);
-    pre_image(new_target).copyTo(img, mask);
+
+     Mat dst;
+
+
+
+     //end of test
+     PWDS pwds1;
+     pwds1.set_image(stereo, 0.4);
+     stereo_thre_val = pwds1.get_key_val();
+     threshold(stereo, stereo, pwds1.get_key_val(), 255, THRESH_BINARY);
+     image.copyTo(dst, stereo);
+     pwds1.set_image(dst, 0.8);
+     image_thre_val = pwds1.get_key_val();
+     threshold(dst, dst, image_thre_val, 255, THRESH_BINARY);
+
+
+    Mat result = dst.clone();
     Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
-    imshow("img--~",img);
-    morphologyEx(img, img, MORPH_ERODE, element);
-    imshow("img--~ erode",img);
-    morphologyEx(img, img, MORPH_DILATE, element);
-    imshow("img--~ dilate",img);
+    morphologyEx(result, result, MORPH_DILATE, element);
+    morphologyEx(result, result, MORPH_ERODE, element);
 
+    morphologyEx(result, result, MORPH_DILATE, element);
+    morphologyEx(result, result, MORPH_ERODE, element);
+    imshow("result", result);
 
-
-    // Calculate PWDS of roi
-    PWDS pwds;
-    pwds.set_image(img, 0.8);
-    cout<<"done setting"<<endl;
-    //    img = pwds.get_foreground(img);
-    thre_val = pwds.get_key_val();
-    //    pre_image(new_target).copyTo(img, mask);
-    cout<<"done set value"<<endl;
-    img = pwds.get_foreground(img);
-    threshold(img, mask, thre_val, 255, THRESH_BINARY);
-    pre_image(new_target).copyTo(img, mask);
-
-    tar_roi = new_target;
-    target = img;
+    // test for efficient of the threshold of both threshold value;
+    Mat t = pre_disp.clone();
+    Mat a = pre_image.clone();
+    Mat d;
+    Mat g;
+    Mat e;
+    threshold(t, t, stereo_thre_val, 255, THRESH_BINARY);
+    a.copyTo(d, t);
+    threshold(d, d, image_thre_val, 255, THRESH_BINARY);
+    hconcat(t, d, e);
+    a.copyTo(g, d);
+    hconcat(e, g, g);
 
     Mat show = pre_image.clone();
+    Moments mo = moments(g(tar_roi));
+    Point center = Point(mo.m10/mo.m00 , mo.m01/mo.m00);
+    cvtColor(g,g, CV_GRAY2BGR);
+    path.push_back(Point(center.x + tar_roi.tl().x, center.y + tar_roi.tl().y));
+
+
+
+    imshow("yee", g);
+
+    tar_roi = new_target;
+//    target = result(tar_roi);
+
     cvtColor(show, show, CV_GRAY2BGR);
     rectangle(show, new_target, Scalar(255, 255, 0), 1, 8, 0);
     imshow("test", show);
+
+
+    if (path.size()>10)
+        path.erase(path.begin());
+    Mat router(pre_image.rows, pre_image.cols, CV_8UC1, Scalar(255));
+    cvtColor(router, router, CV_GRAY2BGR);
+    for (int i = 0; i < path.size(); i++) {
+        circle(router, path[i], 3, Scalar(255-20*i, 255-10*i, 255-10*i), 5, CV_AA, 0);
+    }
+    imshow("path", router);
+
+
 }
 bool Capture::in_bound(Rect inner, Rect outer) {
     if (inner.tl().x < outer.tl().x || inner.br().x > outer.br().x)

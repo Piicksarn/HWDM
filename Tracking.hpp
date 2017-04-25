@@ -17,6 +17,7 @@ private:
     vector<int> img_seq;
     Rect goal;
     Mat src;
+    Mat foreground;
     double phi_1 = 0.3;
     double phi_2 = 0.7;
     void set_velocity();
@@ -25,9 +26,8 @@ private:
     Point bound_x(Point x);
 public:
   void set_position();
-   Mat get_img();
    void cal_fitness();
-    void initialize(Rect goal_rect, Mat img, vector<int> g_seq, double threshold_val);
+    void initialize(Rect goal_rect, Mat img, vector<int> g_seq, double threshold_val, Mat fore);
     void update(Point group_best);
     double get_fitness();
     Point get_position();
@@ -40,13 +40,17 @@ private:
     double gray_thre_val;
     double best_val;
     Rect target;
-    int iter_time = 1;
-    int amount = 40;
+    Mat img;
+    int amount = 90;
+    int stereo_thre_val;
+    int image_thre_val;
+    bool find_out = true;
     vector<int> sequentialize(Mat img);
     void update();
     void find_best();
 public:
-    void initialize(Mat img, Mat src, Rect t, double threshold_val);
+    void initialize(Mat goal_region, Mat gray_img, Rect t, double threshold_val, Mat foreground);
     Rect get_result();
+    void set_threshold(int stereo, int image);
     void training();
 };

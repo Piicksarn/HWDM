@@ -1,16 +1,18 @@
 #include "Tracking.hpp"
 
-void PSO::initialize(Mat img, Mat src, Rect t, double threshold_val) {
+void PSO::initialize(Mat goal_region, Mat gray_img, Rect t, double threshold_val, Mat foreground) {
     // Calculate the value of standard goal
     best_val = (double)INT_MAX;
     gray_thre_val = threshold_val;
-    goal = sequentialize(img);
+    goal = sequentialize(goal_region);
     target = t;
     srand( (unsigned)time(NULL));
-
+    img = gray_img;
+    imshow("gray", img);
+    imshow("fore ground", foreground);
     for (int i = 0; i < amount; i++) {
       Agent *agent = new Agent;
-      agent->initialize(target, src, goal, gray_thre_val);
+      agent->initialize(target, gray_img, goal, gray_thre_val,foreground);
       agent_list.push_back(*agent);
       delete agent;
     }
@@ -30,12 +32,16 @@ void PSO::training() {
     int counter = 0;
     while(1) {
         find_best();
+        if (best_val < 13500000 )
+            break;
+        if (best_val > 13500000 && counter >= 10) {
+           break;
+        }
+
         for (int i = 0; i < agent_list.size(); i++) {
             agent_list[i].update(group_best);
             agent_list[i].cal_fitness();
         }
-        if (best_val < 13500000)
-            break;
         counter++;
     }
 }
