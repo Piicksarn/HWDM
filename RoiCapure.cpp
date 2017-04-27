@@ -51,14 +51,7 @@ void Capture::cal_roi() {
     mask = pre_disp.clone();
     mask.copyTo(both_diff, both_diff);
     mask = both_diff;
-
-
-   if(target.empty()) {
-       roi_check(disp_roi, src_roi, pre_disp);
-   }
-   else {
-       do_tracking();
-   }
+    roi_check(disp_roi, src_roi, pre_disp);
 }
 
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
@@ -242,4 +235,11 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
     }
     drawContours(fgmask, contours, largest_contour_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
     return bounding_rect;
+}
+
+bool Capture::target_exit() {
+    if(target.empty())
+       return false;
+     else
+           return true;
 }

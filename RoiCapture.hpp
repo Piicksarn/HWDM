@@ -27,7 +27,6 @@ private:
     void roi_check(Rect roi_d, Rect roi_src, Mat src);
     bool in_bound(Rect inner, Rect outer);
     Mat set_target(Mat mask, Rect Roi, Mat src);
-    void do_tracking();
     Mat get_foreground();
     Rect update_roi(Rect roi);
     void update_target(Rect new_target);
@@ -35,6 +34,9 @@ public:
     void initialize(Mat stereo, Mat left);
     void update_frame(Mat new_img, Mat new_disp);
     void cal_roi();
+    bool target_exit();
+    void do_tracking();
+
 };
 
 class ROI {
