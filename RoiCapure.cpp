@@ -39,19 +39,42 @@ void Capture::cal_roi() {
     getNiceFgMask(src_diff);
 
     Mat both_diff = disp_diff & src_diff;
-    threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
-    Mat result3;
-    hconcat(src_diff, disp_diff, result3);
-    hconcat(result3, both_diff, result3);
-    imshow("different", result3);
+        threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
+        Mat result_mask = both_diff.clone();
+        Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
+        morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
+        morphologyEx(result_mask, result_mask, MORPH_ERODE, element);
+        morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
+        morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
+        morphologyEx(result_mask, result_mask, MORPH_ERODE, element);
 
-    Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
-    Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
-    threshold(src_diff, both_diff, 200, 255, THRESH_BINARY);
-    mask = pre_disp.clone();
-    mask.copyTo(both_diff, both_diff);
-    mask = both_diff;
-    roi_check(disp_roi, src_roi, pre_disp);
+        mask = pre_disp.clone();
+        Mat dst;
+        mask.copyTo(dst, result_mask);
+        Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
+        Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
+        mask = dst;
+        roi_check(disp_roi, src_roi, pre_disp);
+
+        imshow("now frame", pre_disp);
+        imshow("mask", dst);
+
+
+    // Mat both_diff = disp_diff & src_diff;
+    // threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
+    // Mat result3;
+    // hconcat(src_diff, disp_diff, result3);
+    // hconcat(result3, both_diff, result3);
+    // imshow("different", result3);
+
+    // Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
+    // Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
+    // threshold(src_diff, both_diff, 200, 255, THRESH_BINARY);
+    // mask = pre_disp.clone();
+    // mask.copyTo(both_diff, both_diff);
+    // mask = both_diff;
+    // imshow("mask", mask);
+    // roi_check(disp_roi, src_roi, pre_disp);
 }
 
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
@@ -60,7 +83,8 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
     Mat img = src.clone();
 
     cvtColor(img, img, CV_GRAY2BGR);
-    if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
+    if(is_target(roi_d)) {
+    // if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
         rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
         rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
         pwds.set_image(mask(roi_d), 0.55);
@@ -76,7 +100,31 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
         image_thre_val = pwds.get_key_val();
     }
 }
+bool Capture::is_target(Rect roi_d) {
 
+    roiList.push_back(roi_d);
+    double d = norm(roiList[roiList.size()-1].tl()-roiList[roiList.size()-2].tl());
+    Mat img = pre_image.clone();
+    rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
+    imshow("is target ", img);
+    cout<<"this frame"<<mean(pre_disp)[0];
+    cout<<"   m: "<<mean(mask(roi_d))[0];
+    cout<<"   d: "<<d;
+
+    if (mean(mask(roi_d))[0] > mean(pre_disp)[0] * 1 / 2 && d < 15) {
+        roi_amount++;
+        cout<<"=======>"<<roi_amount;
+    }
+    else
+        roi_amount = 0;
+
+    cout<<endl;
+
+    if (roi_amount >= 4)
+        return true;
+    else
+        return false;
+}
 Mat Capture::set_target(Mat mask, Rect Roi, Mat src) {
     threshold(mask, mask, 10, 255, THRESH_BINARY);
     Mat result;

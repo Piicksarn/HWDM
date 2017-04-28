@@ -22,21 +22,23 @@ private:
     int stereo_thre_val;
     int image_thre_val;
     vector<Point> path;
+    vector<Rect> roiList;
+    int roi_amount = 0;
     void getNiceFgMask(Mat fgmask);
     Rect getNiceContour( Mat fgmask, Mat left, int i);
     void roi_check(Rect roi_d, Rect roi_src, Mat src);
     bool in_bound(Rect inner, Rect outer);
     Mat set_target(Mat mask, Rect Roi, Mat src);
     Mat get_foreground();
+    bool is_target(Rect roi_d);
     Rect update_roi(Rect roi);
     void update_target(Rect new_target);
 public:
     void initialize(Mat stereo, Mat left);
     void update_frame(Mat new_img, Mat new_disp);
     void cal_roi();
-    bool target_exit();
     void do_tracking();
-
+    bool target_exit();
 };
 
 class ROI {
