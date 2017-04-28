@@ -20,6 +20,8 @@ void Capture::update_frame(Mat new_img, Mat new_disp) {
 void Capture::cal_roi() {
     Mat disp_diff_A, src_diff_A, disp_diff_B, src_diff_B;
     Mat disp_diff, src_diff;
+
+    // Get the different pixel between time: t-1, t, t
     absdiff(disp_map, pre_disp, disp_diff_B);
     absdiff(source, pre_image, src_diff_B);
 
@@ -29,8 +31,7 @@ void Capture::cal_roi() {
     disp_diff = disp_diff_A & disp_diff_B;
     src_diff = src_diff_A & src_diff_B;
 
-    Mat temp = src_diff.clone();
-
+    // Getting the mask of the region of interest
     threshold(src_diff, src_diff, 20, 255, THRESH_BINARY);
     threshold(disp_diff, disp_diff, 10, 255, THRESH_BINARY);
     equalizeHist(disp_diff, disp_diff);
@@ -39,54 +40,36 @@ void Capture::cal_roi() {
     getNiceFgMask(src_diff);
 
     Mat both_diff = disp_diff & src_diff;
-        threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
-        Mat result_mask = both_diff.clone();
-        Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
-        morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
-        morphologyEx(result_mask, result_mask, MORPH_ERODE, element);
-        morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
-        morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
-        morphologyEx(result_mask, result_mask, MORPH_ERODE, element);
+    threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
+    Mat result_mask = both_diff.clone();
+    Mat element = getStructuringElement(MORPH_CROSS, Size(5,5), Point(2, 2));
+    morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
+    morphologyEx(result_mask, result_mask, MORPH_ERODE, element);
+    morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
+    morphologyEx(result_mask, result_mask, MORPH_DILATE, element);
+    morphologyEx(result_mask, result_mask, MORPH_ERODE, element);
 
-        mask = pre_disp.clone();
-        Mat dst;
-        mask.copyTo(dst, result_mask);
-        Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
-        Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
-        mask = dst;
-        roi_check(disp_roi, src_roi, pre_disp);
-
-        imshow("now frame", pre_disp);
-        imshow("mask", dst);
-
-
-    // Mat both_diff = disp_diff & src_diff;
-    // threshold(both_diff, both_diff, 20, 255, THRESH_BINARY);
-    // Mat result3;
-    // hconcat(src_diff, disp_diff, result3);
-    // hconcat(result3, both_diff, result3);
-    // imshow("different", result3);
-
-    // Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
-    // Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
-    // threshold(src_diff, both_diff, 200, 255, THRESH_BINARY);
-    // mask = pre_disp.clone();
-    // mask.copyTo(both_diff, both_diff);
-    // mask = both_diff;
-    // imshow("mask", mask);
-    // roi_check(disp_roi, src_roi, pre_disp);
+    mask = pre_disp.clone();
+    Mat dst;
+    mask.copyTo(dst, result_mask);
+    Rect disp_roi = getNiceContour(both_diff, pre_disp, 1);
+    Rect src_roi = getNiceContour(src_diff, pre_disp, 2);
+    mask = dst;
+    roi_check(disp_roi, src_roi, pre_disp);
 }
 
 void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
     PWDS pwds;
     Mat fore_mask;
     Mat img = src.clone();
-
+    Mat stereo = pre_disp.clone();
     cvtColor(img, img, CV_GRAY2BGR);
+    vector<Vec4i> hierarchy;
+    int largest_area = 0;
+    vector<vector<Point>> contours;
+    Rect bounding_rect;
     if(is_target(roi_d)) {
-    // if(roi_d.area() != 0 && (roi_src.area()/roi_d.area()) < 7 && in_bound(roi_d, roi_src)) {
-        rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
-        rectangle(img, roi_src, Scalar(255, 255, 0), 1, 8, 0);
+        // Get the threshold value of the stereo image and gray image
         pwds.set_image(mask(roi_d), 0.55);
         fore_mask = pwds.get_foreground(mask(roi_d));
         stereo_thre_val = pwds.get_key_val();
@@ -94,32 +77,37 @@ void Capture::roi_check(Rect roi_d, Rect roi_src, Mat src) {
         pwds.set_image(set_target(fore_mask, roi_d, pre_image), 0.85);
         fore_mask = pwds.get_foreground(set_target(fore_mask, roi_d, pre_image));
         threshold(fore_mask, fore_mask, 10, 255, THRESH_BINARY);
-        target = set_target(fore_mask, roi_d, pre_image);
-        tar_roi = roi_d;
-        thre_val = pwds.get_key_val();
         image_thre_val = pwds.get_key_val();
+        thre_val = pwds.get_key_val();
+
+        // Set the target position and the target image
+        Mat search_image = get_foreground();
+        Mat tmp = search_image.clone();
+        findContours(search_image, contours, CV_FILLED, CV_CHAIN_APPROX_NONE);
+        for(int i = 0; i < contours.size(); i++)
+        {
+            double a = contourArea(contours[i], false);
+            if(a > largest_area){
+                largest_area = a;
+                bounding_rect = boundingRect(contours[i]);
+            }
+        }
+        tar_roi = bounding_rect;
+        target = set_target(tmp(bounding_rect), bounding_rect, pre_image);
     }
 }
 bool Capture::is_target(Rect roi_d) {
-
     roiList.push_back(roi_d);
     double d = norm(roiList[roiList.size()-1].tl()-roiList[roiList.size()-2].tl());
     Mat img = pre_image.clone();
     rectangle(img, roi_d, Scalar(0, 255, 0), 1, 8, 0);
-    imshow("is target ", img);
-    cout<<"this frame"<<mean(pre_disp)[0];
-    cout<<"   m: "<<mean(mask(roi_d))[0];
-    cout<<"   d: "<<d;
 
-    if (mean(mask(roi_d))[0] > mean(pre_disp)[0] * 1 / 2 && d < 15) {
+    if (mean(mask(roi_d))[0] > mean(pre_disp)[0] * 1 / 2 && d < 15)
         roi_amount++;
-        cout<<"=======>"<<roi_amount;
-    }
     else
         roi_amount = 0;
 
-    cout<<endl;
-
+    // Return the result
     if (roi_amount >= 4)
         return true;
     else
@@ -135,15 +123,10 @@ Mat Capture::set_target(Mat mask, Rect Roi, Mat src) {
 
 void Capture::do_tracking() {
     Mat search_image = get_foreground();
-//     if(target.empty())
-//         target = search_image(tar_roi);
-     PSO pso;
-     pso.initialize(target, pre_image, tar_roi, thre_val, search_image);
-     pso.training();
-//    Mat integral_image;
-//    integral(search_image, integral_image);
-
-     update_target(pso.get_result());
+    PSO pso;
+    pso.initialize(target, pre_image, tar_roi, thre_val, search_image);
+    pso.training();
+    update_target(pso.get_result());
 }
 
 Mat Capture::get_foreground() {
@@ -159,32 +142,30 @@ Mat Capture::get_foreground() {
     morphologyEx(result, result, MORPH_DILATE, element);
     morphologyEx(result, result, MORPH_ERODE, element);
     image.copyTo(result, result);
-    imshow("dst", result);
-
     return result;
 }
 void Capture::update_target(Rect new_target) {
 
     Mat stereo = pre_disp(new_target);
     Mat image = pre_image(new_target);
-    imshow("test-stereo", stereo);
-    imshow("test-image", image);
-    imshow("stereo", pre_disp);
+    // imshow("test-stereo", stereo);
+    // imshow("test-image", image);
+    // imshow("stereo", pre_disp);
 
 
-     Mat dst;
+    Mat dst;
 
 
 
-     //end of test
-     PWDS pwds1;
-     pwds1.set_image(stereo, 0.4);
-     stereo_thre_val = pwds1.get_key_val();
-     threshold(stereo, stereo, pwds1.get_key_val(), 255, THRESH_BINARY);
-     image.copyTo(dst, stereo);
-     pwds1.set_image(dst, 0.8);
-     image_thre_val = pwds1.get_key_val();
-     threshold(dst, dst, image_thre_val, 255, THRESH_BINARY);
+    //end of test
+    PWDS pwds1;
+    pwds1.set_image(stereo, 0.4);
+    stereo_thre_val = pwds1.get_key_val();
+    threshold(stereo, stereo, pwds1.get_key_val(), 255, THRESH_BINARY);
+    image.copyTo(dst, stereo);
+    pwds1.set_image(dst, 0.8);
+    image_thre_val = pwds1.get_key_val();
+    threshold(dst, dst, image_thre_val, 255, THRESH_BINARY);
 
 
     Mat result = dst.clone();
@@ -220,7 +201,6 @@ void Capture::update_target(Rect new_target) {
     imshow("yee", g);
 
     tar_roi = new_target;
-//    target = result(tar_roi);
 
     cvtColor(show, show, CV_GRAY2BGR);
     rectangle(show, new_target, Scalar(255, 255, 0), 1, 8, 0);
@@ -287,7 +267,7 @@ Rect Capture::getNiceContour(Mat fgmask, Mat left, int i) {
 
 bool Capture::target_exit() {
     if(target.empty())
-       return false;
-     else
-           return true;
+        return false;
+    else
+        return true;
 }
