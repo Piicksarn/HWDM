@@ -17,6 +17,7 @@ private:
     Mat mask;
     Mat target;
     Rect tar_roi;
+    Mat diff;
     int frame_index;
     double thre_val;
     int stereo_thre_val;
@@ -28,8 +29,10 @@ private:
     Rect getNiceContour( Mat fgmask, Mat left, int i);
     void roi_check(Rect roi_d, Rect roi_src, Mat src);
     bool in_bound(Rect inner, Rect outer);
-    Mat set_target(Mat mask, Rect Roi, Mat src);
+    Mat merge_fore(Mat mask, Rect Roi, Mat src);
+    void set_target(Rect roi, Mat image);
     Mat get_foreground();
+    Mat get_diff();
     bool is_target(Rect roi_d);
     Rect update_roi(Rect roi);
     void update_target(Rect new_target);
