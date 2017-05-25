@@ -1,4 +1,4 @@
-#include "Roicapture.hpp"
+#include "headfile/PWDS.hpp"
 
 void PWDS::set_image(Mat img, double bound_val) {
     image = img;
@@ -23,7 +23,7 @@ void PWDS::density_estimate() {
     for (int i = 0; i < gray_popu_val.size(); i++) {
         line(showHistImg, Point((int)i, (int)((1-gray_popu_val[i].y*10)*100)), Point((int)gray_popu_val[i].x, 99), Scalar(23, 120, 35));
     }
-    // imshow("test", showHistImg);
+     imshow("test", showHistImg);
 }
 float PWDS::cal_window(Mat window, int i) {
     uchar *ptr = &window.at<uchar>(0, 0);

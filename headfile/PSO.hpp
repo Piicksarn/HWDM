@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include "Target.hpp"
 using namespace std;
 using namespace cv;
 
@@ -49,6 +50,7 @@ private:
     void update();
     void find_best();
 public:
+    // void initialize(Target target);
     void initialize(Mat goal_region, Mat gray_img, Rect t, double threshold_val, Mat foreground);
     Rect get_result();
     void set_threshold(int stereo, int image);
